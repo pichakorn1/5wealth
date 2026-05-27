@@ -1,0 +1,2101 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5 Wealth Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --w:   #ffffff;
+  --g50: #f7f7f7;
+  --g100:#eeeeee;
+  --g200:#dddddd;
+  --g300:#cccccc;
+  --g400:#aaaaaa;
+  --g500:#888888;
+  --g700:#444444;
+  --g900:#1a1a1a;
+  --acc: #1a1a1a;
+  --red: #c0392b;
+  --grn: #27604a;
+  --blu: #1f4e79;
+  --r: 2px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--g50);color:var(--g900);font-size:13px;line-height:1.5;}
+
+/* NAV */
+nav{
+  position:sticky;top:0;z-index:300;
+  background:var(--w);border-bottom:1px solid var(--g200);
+  display:flex;align-items:center;gap:0;height:52px;
+}
+.nav-brand{
+  font-size:13px;font-weight:500;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--g900);
+  padding:0 24px;border-right:1px solid var(--g200);
+  height:100%;display:flex;align-items:center;white-space:nowrap;
+}
+.nav-tabs{display:flex;height:100%;}
+.nav-tab{
+  height:100%;padding:0 20px;border:none;border-right:1px solid var(--g200);
+  background:transparent;font-family:'IBM Plex Sans',sans-serif;
+  font-size:12px;font-weight:400;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--g400);cursor:pointer;transition:color 0.1s;
+}
+.nav-tab:hover{color:var(--g900);}
+.nav-tab.active{color:var(--g900);background:var(--g50);border-bottom:2px solid var(--g900);}
+.nav-date{
+  margin-left:auto;display:flex;align-items:center;gap:0;
+  height:100%;border-left:1px solid var(--g200);
+}
+.nav-date button{
+  width:36px;height:100%;border:none;border-right:1px solid var(--g200);
+  background:transparent;cursor:pointer;color:var(--g400);font-size:16px;
+  transition:all 0.1s;
+}
+.nav-date button:last-child{border-right:none;border-left:1px solid var(--g200);}
+.nav-date button:hover{background:var(--g50);color:var(--g900);}
+#date-display{
+  padding:0 16px;font-size:11px;font-weight:400;letter-spacing:0.05em;
+  color:var(--g500);white-space:nowrap;font-family:'IBM Plex Mono',monospace;
+}
+
+/* LAYOUT */
+.page{display:none;max-width:1024px;margin:0 auto;padding:24px 24px 80px;}
+.page.active{display:block;}
+
+/* MODULE */
+.mod{background:var(--w);border:1px solid var(--g200);margin-bottom:1px;}
+.mod-header{
+  display:flex;align-items:center;gap:16px;
+  padding:14px 20px;border-bottom:1px solid var(--g200);
+}
+.mod-index{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:400;
+  color:var(--g400);letter-spacing:0.1em;min-width:20px;
+}
+.mod-title{font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--g900);}
+.mod-sub{font-size:11px;color:var(--g400);margin-left:auto;letter-spacing:0.04em;}
+.mod-body{padding:20px;}
+
+/* LABEL */
+.lbl{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--g400);margin-bottom:6px;}
+.row-gap{display:flex;flex-direction:column;gap:8px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;}
+.mt16{margin-top:16px;}
+.mt12{margin-top:12px;}
+.mt8{margin-top:8px;}
+
+/* INPUT */
+input[type=text],input[type=number],textarea,select{
+  font-family:'IBM Plex Sans',sans-serif;font-size:13px;
+  background:var(--g50);border:1px solid var(--g200);
+  border-radius:var(--r);color:var(--g900);
+  padding:8px 10px;width:100%;outline:none;resize:none;
+  transition:border-color 0.1s;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--g900);background:var(--w);}
+::placeholder{color:var(--g300);}
+select{appearance:none;cursor:pointer;}
+select option{background:var(--w);}
+
+/* MOOD */
+.mood-row{display:flex;gap:4px;flex-wrap:wrap;}
+.mood-btn{
+  padding:6px 12px;border:1px solid var(--g200);
+  background:var(--w);font-size:11px;color:var(--g500);
+  cursor:pointer;letter-spacing:0.04em;border-radius:var(--r);
+  transition:all 0.1s;font-family:'IBM Plex Sans',sans-serif;
+}
+.mood-btn:hover{border-color:var(--g400);}
+.mood-btn.active{background:var(--g900);border-color:var(--g900);color:var(--w);}
+
+/* SLIDER */
+.slider-wrap{display:flex;align-items:center;gap:12px;margin-top:8px;}
+.slider-wrap label{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--g400);white-space:nowrap;}
+input[type=range]{
+  -webkit-appearance:none;flex:1;height:1px;
+  background:var(--g200);border-radius:0;border:none;padding:0;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:12px;height:12px;
+  background:var(--g900);border-radius:0;cursor:pointer;
+}
+.slider-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--g900);min-width:16px;}
+
+/* MATRIX */
+.matrix{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--g200);}
+.quad{background:var(--w);padding:14px;}
+.quad-head{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--g100);}
+.quad-tag{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;}
+.quad-hint{font-size:10px;color:var(--g400);}
+.task-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.task-cb{
+  width:14px;height:14px;border:1px solid var(--g300);
+  background:var(--w);cursor:pointer;flex-shrink:0;
+  appearance:none;border-radius:0;transition:all 0.1s;
+  position:relative;
+}
+.task-cb.done{background:var(--g900);border-color:var(--g900);}
+.task-cb.done::after{content:'';position:absolute;top:2px;left:4px;width:4px;height:7px;border:1.5px solid var(--w);border-top:none;border-left:none;transform:rotate(45deg);}
+.task-inp{
+  flex:1;background:transparent;border:none;border-bottom:1px solid transparent;
+  font-size:12px;color:var(--g900);padding:2px 0;outline:none;
+  font-family:'IBM Plex Sans',sans-serif;
+}
+.task-inp:focus{border-bottom-color:var(--g200);}
+.task-inp.done{text-decoration:line-through;color:var(--g300);}
+
+/* MEALS */
+.meal-card{background:var(--g50);border:1px solid var(--g200);margin-bottom:1px;}
+.meal-top{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-bottom:1px solid var(--g200);
+  background:var(--w);
+}
+.meal-name-inp{
+  background:transparent;border:none;font-size:12px;font-weight:500;
+  letter-spacing:0.04em;color:var(--g900);outline:none;padding:0;
+  width:auto;flex:1;
+}
+.meal-kcal-total{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--g500);}
+.meal-body{padding:10px 14px;}
+.food-row{display:grid;grid-template-columns:2fr 52px 44px 44px 44px 24px;gap:4px;align-items:center;margin-bottom:4px;}
+.food-inp{font-size:12px;padding:6px 8px;}
+.food-num{font-size:11px;padding:6px 6px;text-align:right;font-family:'IBM Plex Mono',monospace;}
+.del-x{background:none;border:none;color:var(--g300);cursor:pointer;font-size:14px;text-align:center;padding:0;line-height:1;}
+.del-x:hover{color:var(--red);}
+.food-header{display:grid;grid-template-columns:2fr 52px 44px 44px 44px 24px;gap:4px;margin-bottom:6px;}
+.fh{font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--g400);text-align:right;padding:0 6px;}
+.fh:first-child{text-align:left;padding:0 8px;}
+
+/* MACRO TOTAL BAR */
+.macro-bar{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--g200);border:1px solid var(--g200);margin-top:12px;
+}
+.macro-cell{background:var(--w);padding:10px;text-align:center;}
+.macro-val{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:300;}
+.macro-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--g400);margin-top:2px;}
+
+/* EXERCISE */
+.ex-row{display:grid;grid-template-columns:130px 1fr 64px 36px;gap:4px;align-items:center;margin-bottom:4px;}
+
+/* METRIC */
+.metric-pair{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--g200);border:1px solid var(--g200);margin-top:12px;}
+.metric-cell{background:var(--w);padding:14px 16px;}
+.metric-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--g400);margin-bottom:8px;}
+.metric-input-row{display:flex;align-items:baseline;gap:6px;}
+.metric-big{
+  font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:300;
+  background:transparent;border:none;outline:none;
+  color:var(--g900);width:100%;padding:0;
+}
+.metric-unit{font-size:11px;color:var(--g400);}
+.metric-btns{display:flex;gap:4px;margin-top:8px;}
+.metric-btn{
+  padding:4px 10px;border:1px solid var(--g200);background:var(--g50);
+  font-size:11px;color:var(--g500);cursor:pointer;font-family:'IBM Plex Mono',monospace;
+  border-radius:var(--r);transition:all 0.1s;
+}
+.metric-btn:hover{border-color:var(--g900);color:var(--g900);}
+.prog{height:1px;background:var(--g100);margin-top:10px;}
+.prog-fill{height:100%;background:var(--g700);transition:width 0.2s;}
+.prog-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--g400);margin-top:4px;text-align:right;}
+
+/* FINANCE */
+.fin-tabs{display:flex;gap:0;border:1px solid var(--g200);margin-bottom:1px;}
+.fin-tab{
+  flex:1;padding:8px;border:none;border-right:1px solid var(--g200);
+  background:var(--g50);font-family:'IBM Plex Sans',sans-serif;
+  font-size:11px;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--g400);cursor:pointer;transition:all 0.1s;
+}
+.fin-tab:last-child{border-right:none;}
+.fin-tab.act-inc{background:var(--w);color:var(--grn);border-bottom:2px solid var(--grn);}
+.fin-tab.act-exp{background:var(--w);color:var(--red);border-bottom:2px solid var(--red);}
+.fin-tab.act-var{background:var(--w);color:var(--g700);border-bottom:2px solid var(--g700);}
+
+.cat-rail{display:flex;gap:4px;flex-wrap:wrap;padding:10px 0;margin-bottom:8px;border-bottom:1px solid var(--g100);}
+.cat-chip{
+  padding:4px 10px;border:1px solid var(--g200);background:var(--g50);
+  font-size:11px;letter-spacing:0.04em;color:var(--g500);
+  cursor:pointer;transition:all 0.1s;border-radius:var(--r);
+}
+.cat-chip:hover{border-color:var(--g400);}
+.cat-chip.act{background:var(--g900);border-color:var(--g900);color:var(--w);}
+
+.txn-row{
+  display:grid;grid-template-columns:auto 1fr 80px 24px;
+  gap:6px;align-items:center;padding:8px 0;
+  border-bottom:1px solid var(--g100);
+}
+.txn-row:last-child{border-bottom:none;}
+.txn-badge{
+  font-size:9px;letter-spacing:0.07em;text-transform:uppercase;font-weight:500;
+  padding:3px 8px;border:1px solid currentColor;white-space:nowrap;border-radius:var(--r);
+}
+.txn-note-inp{background:transparent;border:none;font-size:12px;color:var(--g900);outline:none;padding:0;border-bottom:1px solid transparent;}
+.txn-note-inp:focus{border-bottom-color:var(--g200);}
+.txn-amt{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;
+  background:transparent;border:none;text-align:right;
+  outline:none;padding:0;width:100%;
+}
+
+.fin-foot{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--g200);border:1px solid var(--g200);margin-top:16px;
+}
+.fin-foot-cell{background:var(--w);padding:12px;text-align:center;}
+.fin-foot-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--g400);}
+.fin-foot-val{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:300;margin-top:4px;}
+
+/* SOCIAL */
+.contact-block{background:var(--w);border:1px solid var(--g200);padding:14px;margin-bottom:1px;}
+.contact-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.contact-name-inp{
+  flex:1;background:transparent;border:none;font-size:13px;font-weight:500;
+  color:var(--g900);outline:none;border-bottom:1px solid var(--g100);padding:2px 0;
+}
+.act-pills{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;}
+.act-pill{
+  padding:4px 10px;border:1px solid var(--g200);background:var(--g50);
+  font-size:11px;color:var(--g500);cursor:pointer;border-radius:var(--r);
+  transition:all 0.1s;
+}
+.act-pill.act{background:var(--g900);border-color:var(--g900);color:var(--w);}
+
+/* ADD BUTTON */
+.add-row{
+  display:flex;align-items:center;gap:8px;padding:8px 0;
+  font-size:11px;color:var(--g400);cursor:pointer;letter-spacing:0.06em;
+  border-top:1px dashed var(--g200);margin-top:4px;transition:color 0.1s;
+  background:none;border-bottom:none;border-left:none;border-right:none;
+  width:100%;text-align:left;font-family:'IBM Plex Sans',sans-serif;
+}
+.add-row:hover{color:var(--g900);}
+.add-row::before{content:'+';font-size:14px;font-weight:300;}
+
+/* BOTTOM BAR */
+.bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:var(--w);border-top:1px solid var(--g200);
+  display:flex;align-items:center;height:48px;
+}
+.bar-score{
+  width:48px;height:100%;border-right:1px solid var(--g200);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:400;
+  color:var(--g900);flex-shrink:0;
+}
+.bar-items{display:flex;flex:1;}
+.bar-cell{
+  flex:1;height:48px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;border-right:1px solid var(--g200);
+}
+.bar-cell:last-child{border-right:none;}
+.bar-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--g400);}
+.bar-val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--g900);margin-top:1px;}
+
+/* DASHBOARD */
+.dash-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.dash-ttl{font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--g700);}
+.dash-export{display:flex;gap:4px;}
+.dash-btn{
+  padding:6px 14px;border:1px solid var(--g200);background:var(--w);
+  font-family:'IBM Plex Sans',sans-serif;font-size:11px;letter-spacing:0.06em;
+  text-transform:uppercase;color:var(--g500);cursor:pointer;border-radius:var(--r);
+  transition:all 0.1s;
+}
+.dash-btn:hover{border-color:var(--g900);color:var(--g900);}
+.import-lbl{
+  padding:6px 14px;border:1px solid var(--g200);background:var(--w);
+  font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--g500);
+  cursor:pointer;border-radius:var(--r);transition:all 0.1s;
+}
+.import-lbl:hover{border-color:var(--g900);color:var(--g900);}
+#file-import{display:none;}
+
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--g200);}
+.dash-card{background:var(--w);padding:20px;}
+.dash-card.full{grid-column:1/-1;}
+.dash-card-title{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--g400);margin-bottom:16px;}
+
+.stat-table{width:100%;}
+.stat-tr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--g100);}
+.stat-tr:last-child{border-bottom:none;}
+.stat-k{font-size:11px;color:var(--g500);}
+.stat-v{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--g900);}
+
+/* KPI STRIP */
+.kpi-cell{background:var(--w);padding:14px 12px;text-align:center;}
+.kpi-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--g400);}
+.kpi-val{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:300;margin-top:4px;color:var(--g900);}
+
+/* HEATMAP */
+.hm-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px;}
+.hm-label-row{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px;}
+.hm-day-lbl{font-size:9px;text-align:center;color:var(--g400);letter-spacing:0.04em;}
+.hm-cell{
+  aspect-ratio:1;border-radius:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--g400);
+  border:1px solid var(--g100);cursor:default;
+  transition:border-color 0.1s;
+}
+.hm-cell:hover{border-color:var(--g400);}
+.hm-cell.hm-0{background:var(--g50);}
+.hm-cell.hm-1{background:#e8ede9;color:#3a6b3a;}
+.hm-cell.hm-2{background:#c8ddc9;color:#2a5a2a;}
+.hm-cell.hm-3{background:#9ec4a0;color:#1a4a1a;}
+.hm-cell.hm-4{background:#5a9e5c;color:#fff;}
+.hm-cell.hm-empty{background:transparent;border-color:transparent;}
+
+/* INSIGHT */
+.insight-row{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:8px 0;border-bottom:1px solid var(--g100);
+}
+.insight-row:last-child{border-bottom:none;}
+.insight-dot{width:6px;height:6px;border-radius:0;flex-shrink:0;margin-top:5px;}
+.insight-txt{font-size:11px;color:var(--g700);line-height:1.6;}
+.insight-val{font-family:'IBM Plex Mono',monospace;font-weight:400;}
+
+@media(max-width:680px){
+  .matrix,.grid2{grid-template-columns:1fr;}
+  .food-row{grid-template-columns:1fr 52px 24px;}
+  .food-row .food-num:nth-child(3),.food-row .food-num:nth-child(4),.food-row .food-num:nth-child(5){display:none;}
+  .food-header .fh:nth-child(3),.food-header .fh:nth-child(4),.food-header .fh:nth-child(5){display:none;}
+  nav{padding:0;}
+  .nav-brand{padding:0 12px;font-size:11px;}
+  .page{padding:16px 12px 80px;}
+  [style*="grid-template-columns:repeat(6"],[style*="grid-template-columns:repeat(8"]{grid-template-columns:repeat(3,1fr)!important;}
+  [style*="grid-template-columns:280px"]{grid-template-columns:1fr!important;}
+  [style*="grid-template-columns:2fr 1fr"]{grid-template-columns:1fr!important;}
+  [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;}
+  [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important;}
+}
+/* DATA PAGE */
+.dat-tab{
+  padding:5px 10px;border:1px solid var(--g200);background:var(--g50);
+  font-family:'IBM Plex Sans',sans-serif;font-size:10px;font-weight:400;
+  letter-spacing:0.06em;text-transform:uppercase;color:var(--g400);
+  cursor:pointer;border-radius:var(--r);transition:all 0.1s;
+}
+.dat-tab:hover{border-color:var(--g400);color:var(--g700);}
+.dat-tab.act{background:var(--g900);border-color:var(--g900);color:var(--w);}
+
+.data-tbl{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+.data-tbl th{
+  position:sticky;top:0;z-index:2;
+  background:var(--g50);padding:8px 10px;
+  text-align:left;font-weight:400;font-size:9px;
+  letter-spacing:0.08em;text-transform:uppercase;color:var(--g400);
+  border-bottom:1px solid var(--g200);white-space:nowrap;
+}
+.data-tbl td{
+  padding:7px 10px;border-bottom:1px solid var(--g100);
+  color:var(--g700);white-space:nowrap;max-width:200px;
+  overflow:hidden;text-overflow:ellipsis;vertical-align:top;
+}
+.data-tbl tr:hover td{background:var(--g50);}
+.data-tbl tr:last-child td{border-bottom:none;}
+.tbl-date{color:var(--g900);font-weight:400;}
+.tbl-pos{color:var(--grn);}
+.tbl-neg{color:var(--red);}
+.tbl-done{color:var(--grn);}
+.tbl-empty{color:var(--g300);font-style:italic;}
+.no-data{padding:32px;text-align:center;font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:var(--g400);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">5WP</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="goPage('daily',this)">Daily</button>
+    <button class="nav-tab" onclick="goPage('dash-daily',this)">Day View</button>
+    <button class="nav-tab" onclick="goPage('dash-month',this)">Monthly</button>
+    <button class="nav-tab" onclick="goPage('data',this)">Data</button>
+  </div>
+  <div class="nav-date">
+    <button onclick="changeDate(-1)">‹</button>
+    <div id="date-display"></div>
+    <button onclick="changeDate(1)">›</button>
+  </div>
+</nav>
+
+<!-- ════ DAILY ════ -->
+<div id="page-daily" class="page active">
+
+  <!-- 01 MENTAL MORNING -->
+  <div class="mod">
+    <div class="mod-header">
+      <span class="mod-index">01</span>
+      <span class="mod-title">Mental — Morning</span>
+      <span class="mod-sub">Check-in</span>
+    </div>
+    <div class="mod-body">
+      <div class="lbl">อารมณ์ตอนตื่น</div>
+      <div class="mood-row" id="morning-mood">
+        <button class="mood-btn" onclick="selMood(this,'morning')">Very Good</button>
+        <button class="mood-btn" onclick="selMood(this,'morning')">Good</button>
+        <button class="mood-btn" onclick="selMood(this,'morning')">Neutral</button>
+        <button class="mood-btn" onclick="selMood(this,'morning')">Tired</button>
+        <button class="mood-btn" onclick="selMood(this,'morning')">Stressed</button>
+      </div>
+      <div class="slider-wrap">
+        <label>Stress Level</label>
+        <input type="range" min="0" max="10" value="3" id="stress-sl" step="1" oninput="sv.textContent=this.value;save()">
+        <span class="slider-num" id="sv">3</span>
+      </div>
+      <div class="mt12">
+        <div class="lbl">ความคิด / สิ่งที่กังวลวันนี้</div>
+        <textarea rows="2" id="morning-thought" placeholder="วันนี้คิดอะไรอยู่?" oninput="save()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 TIME / TASK -->
+  <div class="mod">
+    <div class="mod-header">
+      <span class="mod-index">02</span>
+      <span class="mod-title">Time — Eisenhower Matrix</span>
+      <span class="mod-sub">5 tasks / quadrant · คลิก ✓ = เสร็จ</span>
+    </div>
+    <div class="mod-body" style="padding:0;">
+      <div class="matrix" id="matrix-container"></div>
+    </div>
+  </div>
+
+  <!-- 03 PHYSICAL -->
+  <div class="mod">
+    <div class="mod-header">
+      <span class="mod-index">03</span>
+      <span class="mod-title">Physical — Body</span>
+      <span class="mod-sub">Food · Exercise · Water · Steps</span>
+    </div>
+    <div class="mod-body">
+      <div class="lbl">มื้ออาหาร</div>
+      <div id="meals-container"></div>
+      <button class="add-row" onclick="addMeal()" style="border-top:1px dashed var(--g200);">เพิ่มมื้ออาหาร</button>
+
+      <div class="macro-bar" id="macro-total-bar">
+        <div class="macro-cell"><div class="macro-val" id="t-kcal">0</div><div class="macro-lbl">kcal</div></div>
+        <div class="macro-cell"><div class="macro-val" id="t-pro">0</div><div class="macro-lbl">protein g</div></div>
+        <div class="macro-cell"><div class="macro-val" id="t-carb">0</div><div class="macro-lbl">carbs g</div></div>
+        <div class="macro-cell"><div class="macro-val" id="t-fat">0</div><div class="macro-lbl">fat g</div></div>
+      </div>
+
+      <div class="mt16">
+        <div class="lbl">ออกกำลังกาย</div>
+        <div id="ex-list"></div>
+        <button class="add-row" onclick="addExercise()">เพิ่มการออกกำลังกาย</button>
+      </div>
+
+      <div class="metric-pair">
+        <div class="metric-cell">
+          <div class="metric-lbl">น้ำดื่ม</div>
+          <div class="metric-input-row">
+            <input class="metric-big" type="number" id="water-inp" value="0" min="0" oninput="setWater(+this.value)">
+            <span class="metric-unit">ml</span>
+          </div>
+          <div class="metric-btns">
+            <button class="metric-btn" onclick="addWater(150)">+150</button>
+            <button class="metric-btn" onclick="addWater(250)">+250</button>
+            <button class="metric-btn" onclick="addWater(500)">+500</button>
+          </div>
+          <div class="prog"><div class="prog-fill" id="water-bar" style="width:0%"></div></div>
+          <div class="prog-hint" id="water-hint">0 / 2500 ml</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-lbl">จำนวนก้าว</div>
+          <div class="metric-input-row">
+            <input class="metric-big" type="number" id="steps-inp" value="0" min="0" oninput="setSteps(+this.value)">
+            <span class="metric-unit">steps</span>
+          </div>
+          <div class="metric-btns">
+            <button class="metric-btn" onclick="addSteps(500)">+500</button>
+            <button class="metric-btn" onclick="addSteps(1000)">+1k</button>
+            <button class="metric-btn" onclick="addSteps(5000)">+5k</button>
+          </div>
+          <div class="prog"><div class="prog-fill" id="steps-bar" style="width:0%"></div></div>
+          <div class="prog-hint" id="steps-hint">0 / 10000 steps</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 FINANCIAL -->
+  <div class="mod">
+    <div class="mod-header">
+      <span class="mod-index">04</span>
+      <span class="mod-title">Financial — Transactions</span>
+      <span class="mod-sub">Income · Fix · Variable</span>
+    </div>
+    <div class="mod-body">
+      <div class="fin-tabs">
+        <button class="fin-tab act-inc" id="ft-income" onclick="switchFin('income')">Income</button>
+        <button class="fin-tab" id="ft-expense" onclick="switchFin('expense')">Fix Cost</button>
+        <button class="fin-tab" id="ft-variable" onclick="switchFin('variable')">Variable</button>
+      </div>
+      <div id="fp-income">
+        <div class="cat-rail" id="cr-income"></div>
+        <div id="txn-income"></div>
+        <button class="add-row" onclick="addTxn('income')">เพิ่มรายรับ</button>
+      </div>
+      <div id="fp-expense" style="display:none">
+        <div class="cat-rail" id="cr-expense"></div>
+        <div id="txn-expense"></div>
+        <button class="add-row" onclick="addTxn('expense')">เพิ่มรายจ่าย Fix</button>
+      </div>
+      <div id="fp-variable" style="display:none">
+        <div class="cat-rail" id="cr-variable"></div>
+        <div id="txn-variable"></div>
+        <button class="add-row" onclick="addTxn('variable')">เพิ่มรายจ่าย</button>
+      </div>
+      <div class="fin-foot">
+        <div class="fin-foot-cell"><div class="fin-foot-lbl">Income</div><div class="fin-foot-val" id="total-inc" style="color:var(--grn)">0</div></div>
+        <div class="fin-foot-cell"><div class="fin-foot-lbl">Expense</div><div class="fin-foot-val" id="total-exp" style="color:var(--red)">0</div></div>
+        <div class="fin-foot-cell"><div class="fin-foot-lbl">Balance</div><div class="fin-foot-val" id="total-bal">0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 SOCIAL -->
+  <div class="mod">
+    <div class="mod-header">
+      <span class="mod-index">05</span>
+      <span class="mod-title">Social — Contacts</span>
+      <span class="mod-sub">คนที่ต้องติดต่อวันนี้</span>
+    </div>
+    <div class="mod-body">
+      <div id="contact-list"></div>
+      <button class="add-row" onclick="addContact()">เพิ่มคน / ธุระ</button>
+    </div>
+  </div>
+
+  <!-- 06 MENTAL EVENING -->
+  <div class="mod">
+    <div class="mod-header">
+      <span class="mod-index">06</span>
+      <span class="mod-title">Mental — Evening</span>
+      <span class="mod-sub">Reflection</span>
+    </div>
+    <div class="mod-body">
+      <div class="lbl">วันนี้โดยรวม</div>
+      <div class="mood-row" id="evening-mood" style="margin-bottom:14px;">
+        <button class="mood-btn" onclick="selMood(this,'evening')">Great</button>
+        <button class="mood-btn" onclick="selMood(this,'evening')">Good</button>
+        <button class="mood-btn" onclick="selMood(this,'evening')">OK</button>
+        <button class="mood-btn" onclick="selMood(this,'evening')">Tired</button>
+        <button class="mood-btn" onclick="selMood(this,'evening')">Rough</button>
+      </div>
+      <div class="row-gap">
+        <div><div class="lbl">ค้างคา / ยังไม่เสร็จ</div><textarea rows="2" id="unfinished" placeholder="อะไรที่ยังค้างอยู่?" oninput="save()"></textarea></div>
+        <div><div class="lbl">Priority พรุ่งนี้</div><textarea rows="2" id="next-day" placeholder="Top 1 ที่ต้องทำพรุ่งนี้..." oninput="save()"></textarea></div>
+        <div><div class="lbl">สรุปวันนี้</div><textarea rows="2" id="day-summary" placeholder="วันนี้สอนอะไร?" oninput="save()"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /daily -->
+
+<!-- ════ DASHBOARD: DAY VIEW ════ -->
+<div id="page-dash-daily" class="page">
+
+  <!-- header row -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <div>
+      <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--g400);margin-bottom:2px;">Dashboard</div>
+      <div style="font-size:16px;font-weight:500;letter-spacing:0.02em;" id="dd-title">—</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:0;border:1px solid var(--g200);background:var(--w);">
+      <button style="width:32px;height:32px;border:none;border-right:1px solid var(--g200);background:transparent;cursor:pointer;color:var(--g400);font-size:15px;" onclick="changeDDDate(-1)">‹</button>
+      <span id="dd-date-disp" style="padding:0 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--g500);white-space:nowrap;"></span>
+      <button style="width:32px;height:32px;border:none;border-left:1px solid var(--g200);background:transparent;cursor:pointer;color:var(--g400);font-size:15px;" onclick="changeDDDate(1)">›</button>
+    </div>
+  </div>
+
+  <!-- KPI Strip — 6 cells -->
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--g200);border:1px solid var(--g200);margin-bottom:1px;">
+    <div class="kpi-cell"><div class="kpi-lbl">Score</div><div class="kpi-val" id="dd-score">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Calories</div><div class="kpi-val" id="dd-kcal">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Steps</div><div class="kpi-val" id="dd-steps">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Water</div><div class="kpi-val" id="dd-water">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Tasks ✓</div><div class="kpi-val" id="dd-tasks">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Balance</div><div class="kpi-val" id="dd-bal">—</div></div>
+  </div>
+
+  <!-- Row 1: Radar + Detail stats -->
+  <div style="display:grid;grid-template-columns:280px 1fr;gap:1px;background:var(--g200);margin-bottom:1px;">
+    <div class="dash-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div class="dash-card-title">5 Wealth Balance</div>
+      <canvas id="dd-radar" style="max-width:220px;"></canvas>
+    </div>
+    <div class="dash-card">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;height:100%;">
+        <!-- Physical -->
+        <div style="border-right:1px solid var(--g100);padding-right:16px;">
+          <div class="lbl" style="margin-bottom:10px;color:var(--g900);">01 · Physical</div>
+          <div class="stat-tr"><span class="stat-k">Calories</span><span class="stat-v" id="dd-d-kcal">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Protein</span><span class="stat-v" id="dd-d-pro">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Carbs</span><span class="stat-v" id="dd-d-carb">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Fat</span><span class="stat-v" id="dd-d-fat">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Water</span><span class="stat-v" id="dd-d-water">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Steps</span><span class="stat-v" id="dd-d-steps">—</span></div>
+        </div>
+        <!-- Finance + Task -->
+        <div style="border-right:1px solid var(--g100);padding:0 16px;">
+          <div class="lbl" style="margin-bottom:10px;color:var(--g900);">04 · Financial</div>
+          <div class="stat-tr"><span class="stat-k">Income</span><span class="stat-v" id="dd-d-inc" style="color:var(--grn)">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Fix Cost</span><span class="stat-v" id="dd-d-exp" style="color:var(--red)">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Variable</span><span class="stat-v" id="dd-d-var" style="color:var(--red)">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Balance</span><span class="stat-v" id="dd-d-bal">—</span></div>
+          <div class="lbl" style="margin-top:12px;margin-bottom:10px;color:var(--g900);">02 · Tasks</div>
+          <div class="stat-tr"><span class="stat-k">Done / Total</span><span class="stat-v" id="dd-d-tasks">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Completion</span><span class="stat-v" id="dd-d-taskpct">—</span></div>
+        </div>
+        <!-- Mental + Social -->
+        <div style="padding-left:16px;">
+          <div class="lbl" style="margin-bottom:10px;color:var(--g900);">01/06 · Mental</div>
+          <div class="stat-tr"><span class="stat-k">Morning Mood</span><span class="stat-v" id="dd-d-mmood">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Evening Mood</span><span class="stat-v" id="dd-d-emood">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Stress</span><span class="stat-v" id="dd-d-stress">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Note</span><span class="stat-v" id="dd-d-thought" style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</span></div>
+          <div class="lbl" style="margin-top:12px;margin-bottom:10px;color:var(--g900);">05 · Social</div>
+          <div class="stat-tr"><span class="stat-k">Contacts</span><span class="stat-v" id="dd-d-contacts">—</span></div>
+          <div class="stat-tr"><span class="stat-k">Evening Note</span><span class="stat-v" id="dd-d-nextday" style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: 4 trend charts (7-day context) -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--g200);margin-bottom:1px;">
+    <div class="dash-card">
+      <div class="dash-card-title">Calories — 7 days</div>
+      <canvas id="dd-kcal-c"></canvas>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title">Income vs Expense — 7 days</div>
+      <canvas id="dd-fin-c"></canvas>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title">Steps — 7 days</div>
+      <canvas id="dd-steps-c"></canvas>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title">Task Completion % — 7 days</div>
+      <canvas id="dd-task-c"></canvas>
+    </div>
+  </div>
+
+  <!-- Task detail table -->
+  <div class="dash-card full" style="border:1px solid var(--g200);">
+    <div class="dash-card-title">Task Detail — วันนี้</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:var(--g200);">
+      <div style="background:var(--w);padding:12px;">
+        <div style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--red);margin-bottom:8px;border-bottom:1px solid var(--g100);padding-bottom:6px;">Urgent + Important</div>
+        <div id="dd-tq1" style="font-size:11px;"></div>
+      </div>
+      <div style="background:var(--w);padding:12px;">
+        <div style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--g700);margin-bottom:8px;border-bottom:1px solid var(--g100);padding-bottom:6px;">Important</div>
+        <div id="dd-tq2" style="font-size:11px;"></div>
+      </div>
+      <div style="background:var(--w);padding:12px;">
+        <div style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--blu);margin-bottom:8px;border-bottom:1px solid var(--g100);padding-bottom:6px;">Urgent — Delegate</div>
+        <div id="dd-tq3" style="font-size:11px;"></div>
+      </div>
+      <div style="background:var(--w);padding:12px;">
+        <div style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--g400);margin-bottom:8px;border-bottom:1px solid var(--g100);padding-bottom:6px;">Eliminate</div>
+        <div id="dd-tq4" style="font-size:11px;"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════ DASHBOARD: MONTHLY ════ -->
+<div id="page-dash-month" class="page">
+
+  <!-- header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <div>
+      <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--g400);margin-bottom:2px;">Monthly Summary</div>
+      <div style="font-size:16px;font-weight:500;letter-spacing:0.02em;" id="dm-title">—</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:0;border:1px solid var(--g200);background:var(--w);">
+        <button style="width:32px;height:32px;border:none;border-right:1px solid var(--g200);background:transparent;cursor:pointer;color:var(--g400);font-size:15px;" onclick="changeDMMonth(-1)">‹</button>
+        <span id="dm-month-disp" style="padding:0 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--g500);white-space:nowrap;"></span>
+        <button style="width:32px;height:32px;border:none;border-left:1px solid var(--g200);background:transparent;cursor:pointer;color:var(--g400);font-size:15px;" onclick="changeDMMonth(1)">›</button>
+      </div>
+      <button class="dash-btn" onclick="exportMonthExcel()">↓ Export Month</button>
+    </div>
+  </div>
+
+  <!-- KPI strip — 8 cells -->
+  <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:1px;background:var(--g200);border:1px solid var(--g200);margin-bottom:1px;">
+    <div class="kpi-cell"><div class="kpi-lbl">Days Logged</div><div class="kpi-val" id="dm-days">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Avg Score</div><div class="kpi-val" id="dm-score">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Total Income</div><div class="kpi-val" id="dm-inc" style="color:var(--grn)">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Total Expense</div><div class="kpi-val" id="dm-exp" style="color:var(--red)">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Net Balance</div><div class="kpi-val" id="dm-bal">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Avg Calories</div><div class="kpi-val" id="dm-kcal">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Avg Steps</div><div class="kpi-val" id="dm-steps">—</div></div>
+    <div class="kpi-cell"><div class="kpi-lbl">Task Rate</div><div class="kpi-val" id="dm-taskpct">—</div></div>
+  </div>
+
+  <!-- Row 1: Finance stacked bar + Expense donut -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:1px;background:var(--g200);margin-bottom:1px;">
+    <div class="dash-card">
+      <div class="dash-card-title">Income vs Expense — ทุกวันในเดือน</div>
+      <canvas id="dm-fin-c" style="max-height:200px;"></canvas>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title">Top Expense Categories</div>
+      <canvas id="dm-donut-c" style="max-height:180px;"></canvas>
+    </div>
+  </div>
+
+  <!-- Row 2: Calories line + Steps line -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--g200);margin-bottom:1px;">
+    <div class="dash-card">
+      <div class="dash-card-title">Calories ทุกวัน</div>
+      <canvas id="dm-kcal-c" style="max-height:160px;"></canvas>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title">Steps ทุกวัน</div>
+      <canvas id="dm-steps-c" style="max-height:160px;"></canvas>
+    </div>
+  </div>
+
+  <!-- Row 3: Task heatmap (calendar) + Mood trend -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--g200);margin-bottom:1px;">
+    <div class="dash-card">
+      <div class="dash-card-title">Task Completion — Calendar Heatmap</div>
+      <div id="dm-heatmap" style="font-family:'IBM Plex Mono',monospace;"></div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title">Stress Level — ทุกวัน</div>
+      <canvas id="dm-stress-c" style="max-height:200px;"></canvas>
+    </div>
+  </div>
+
+  <!-- Row 4: Avg macro breakdown + Monthly insight -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--g200);margin-bottom:1px;">
+    <div class="dash-card">
+      <div class="dash-card-title">Avg Daily Macros</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--g100);margin-top:4px;">
+        <div style="background:var(--w);padding:14px;text-align:center;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:300;" id="dm-avg-kcal">—</div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--g400);margin-top:4px;">kcal</div>
+        </div>
+        <div style="background:var(--w);padding:14px;text-align:center;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:300;" id="dm-avg-pro">—</div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--g400);margin-top:4px;">protein g</div>
+        </div>
+        <div style="background:var(--w);padding:14px;text-align:center;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:300;" id="dm-avg-carb">—</div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--g400);margin-top:4px;">carbs g</div>
+        </div>
+        <div style="background:var(--w);padding:14px;text-align:center;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:300;" id="dm-avg-fat">—</div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--g400);margin-top:4px;">fat g</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <canvas id="dm-macro-c" style="max-height:120px;"></canvas>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title">Month Insight</div>
+      <div id="dm-insight" style="font-size:12px;line-height:1.8;"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════ DATA PAGE ════ -->
+<div id="page-data" class="page">
+
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px;">
+    <div>
+      <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--g400);margin-bottom:2px;">Data Management</div>
+      <div style="font-size:15px;font-weight:500;">Import / Export — All Data</div>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--g400);" id="data-storage-info"></div>
+  </div>
+
+  <!-- ACTION ROW -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--g200);border:1px solid var(--g200);margin-bottom:16px;">
+    <div style="background:var(--w);padding:20px;">
+      <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Export</div>
+      <div style="font-size:12px;color:var(--g500);margin-bottom:14px;line-height:1.6;">
+        Export ทุก record ที่มีใน device นี้ออกเป็น Excel — นำไป import บน device อื่น หรือ backup ไว้ได้
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="dash-btn" style="background:var(--g900);color:var(--w);border-color:var(--g900);" onclick="exportAllData()">↓ Export All Data (.xlsx)</button>
+        <button class="dash-btn" onclick="exportAllData('month')">↓ Export เดือนนี้</button>
+      </div>
+      <div style="margin-top:12px;font-size:10px;color:var(--g400);font-family:'IBM Plex Mono',monospace;" id="export-info">— ยังไม่ได้ export</div>
+    </div>
+    <div style="background:var(--w);padding:20px;">
+      <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Import</div>
+      <div style="font-size:12px;color:var(--g500);margin-bottom:14px;line-height:1.6;">
+        Import ไฟล์ที่ export ไว้ — ระบบจะ merge ข้อมูลเข้ากับที่มีอยู่ (ไม่ลบข้อมูลเดิม)
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <label style="background:var(--g900);color:var(--w);border:1px solid var(--g900);padding:6px 14px;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:var(--r);">
+          ↑ Import .xlsx<input type="file" id="import-all-file" accept=".xlsx" style="display:none" onchange="importAllData(this)">
+        </label>
+        <button class="dash-btn" style="color:var(--red);border-color:var(--red);" onclick="clearAllData()">✕ Clear All Local Data</button>
+      </div>
+      <div style="margin-top:12px;font-size:10px;color:var(--g400);font-family:'IBM Plex Mono',monospace;" id="import-info">— ยังไม่ได้ import</div>
+    </div>
+  </div>
+
+  <!-- DATA PREVIEW TABLE -->
+  <div style="background:var(--w);border:1px solid var(--g200);margin-bottom:1px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--g200);">
+      <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;">Stored Records</div>
+      <div style="display:flex;gap:4px;">
+        <button class="dat-tab act" id="dtab-summary"  onclick="switchDataTab('summary',this)">Summary</button>
+        <button class="dat-tab" id="dtab-meals"    onclick="switchDataTab('meals',this)">Meals</button>
+        <button class="dat-tab" id="dtab-exercise" onclick="switchDataTab('exercise',this)">Exercise</button>
+        <button class="dat-tab" id="dtab-tasks"    onclick="switchDataTab('tasks',this)">Tasks</button>
+        <button class="dat-tab" id="dtab-finance"  onclick="switchDataTab('finance',this)">Finance</button>
+        <button class="dat-tab" id="dtab-contacts" onclick="switchDataTab('contacts',this)">Contacts</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;max-height:480px;overflow-y:auto;">
+      <div id="data-table-wrap"></div>
+    </div>
+  </div>
+
+  <!-- SCHEMA REFERENCE -->
+  <div style="background:var(--w);border:1px solid var(--g200);padding:16px;margin-top:1px;">
+    <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">Excel Schema Reference</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div>
+        <div style="font-size:10px;color:var(--g400);font-family:'IBM Plex Mono',monospace;margin-bottom:4px;">DAILY_SUMMARY</div>
+        <div style="font-size:11px;color:var(--g500);line-height:1.8;">date · stress · mood_morning · mood_evening · water_ml · steps · morning_thought · unfinished · next_day · day_summary</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--g400);font-family:'IBM Plex Mono',monospace;margin-bottom:4px;">MEALS</div>
+        <div style="font-size:11px;color:var(--g500);line-height:1.8;">date · meal_name · food · kcal · protein_g · carb_g · fat_g</div>
+        <div style="font-size:10px;color:var(--g400);font-family:'IBM Plex Mono',monospace;margin-top:8px;margin-bottom:4px;">EXERCISE</div>
+        <div style="font-size:11px;color:var(--g500);line-height:1.8;">date · type · detail · kcal_burned</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--g400);font-family:'IBM Plex Mono',monospace;margin-bottom:4px;">TASKS</div>
+        <div style="font-size:11px;color:var(--g500);line-height:1.8;">date · quadrant · task_text · done (1/0)</div>
+        <div style="font-size:10px;color:var(--g400);font-family:'IBM Plex Mono',monospace;margin-top:8px;margin-bottom:4px;">FINANCE</div>
+        <div style="font-size:11px;color:var(--g500);line-height:1.8;">date · type · category · note · amount_thb</div>
+        <div style="font-size:10px;color:var(--g400);font-family:'IBM Plex Mono',monospace;margin-top:8px;margin-bottom:4px;">CONTACTS</div>
+        <div style="font-size:11px;color:var(--g500);line-height:1.8;">date · name · actions · note</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--g100);font-size:11px;color:var(--g400);font-family:'IBM Plex Mono',monospace;">
+      Import rule: ถ้าวันนั้นมีข้อมูลอยู่แล้ว → merge (meals/exercise/tasks/finance/contacts append, summary overwrite) · ถ้าไม่มี → สร้างใหม่
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bar">
+  <div class="bar-score" id="score-ring">--</div>
+  <div class="bar-items">
+    <div class="bar-cell"><div class="bar-lbl">kcal</div><div class="bar-val" id="b-kcal">0</div></div>
+    <div class="bar-cell"><div class="bar-lbl">tasks</div><div class="bar-val" id="b-tasks">0/0</div></div>
+    <div class="bar-cell"><div class="bar-lbl">balance</div><div class="bar-val" id="b-bal">0</div></div>
+    <div class="bar-cell"><div class="bar-lbl">water</div><div class="bar-val" id="b-water">0</div></div>
+    <div class="bar-cell"><div class="bar-lbl">steps</div><div class="bar-val" id="b-steps">0</div></div>
+  </div>
+</div>
+
+
+<script>
+// ═══════════════════════════════════════════════
+//  5 WEALTH PLANNER — COMPLETE JS (v6)
+// ═══════════════════════════════════════════════
+
+// ── CONSTANTS ────────────────────────────────
+const EX_TYPES=['วิ่ง','เดิน','ขี่จักรยาน','ว่ายน้ำ','Leg Day','Push Day','Pull Day','HIIT','Yoga','Pilates','ยกน้ำหนัก','Cardio','อื่นๆ'];
+const CATS={
+  income:  ['เงินเดือน','Freelance','ธุรกิจ','ดอกเบี้ย','ปันผล','ขายของ','โบนัส','อื่นๆ'],
+  expense: ['ค่าเช่า','ผ่อนรถ','ประกัน','ค่าน้ำ/ไฟ','Internet','Streaming','ผ่อนอื่นๆ','อื่นๆ'],
+  variable:['อาหาร','เครื่องดื่ม','ขนม','เสื้อผ้า','การเดินทาง','ความบันเทิง','ของใช้','สุขภาพ/ยา','ช็อปปิ้ง','อื่นๆ']
+};
+const QMETA={
+  q1:{label:'ด่วน + สำคัญ',hint:'Do now',color:'#c0392b'},
+  q2:{label:'สำคัญ ไม่ด่วน',hint:'Schedule',color:'#444'},
+  q3:{label:'ด่วน ไม่สำคัญ',hint:'Delegate',color:'#1f4e79'},
+  q4:{label:'ไม่สำคัญ',hint:'Eliminate',color:'#aaa'}
+};
+const CONTACT_ACTIONS=['โทร','Line','Email','WhatsApp','นัดพบ','ส่งเงิน','Follow-up','ขอบคุณ','อื่นๆ'];
+const QN_EXPORT={q1:'Urgent+Important',q2:'Important',q3:'Urgent-Delegate',q4:'Eliminate'};
+const TYPE_LABEL={income:'Income',expense:'Fix Cost',variable:'Variable'};
+const TYPE_REV={'Income':'income','Fix Cost':'expense','Variable':'variable'};
+const QN_IMPORT={'Urgent+Important':'q1','Important':'q2','Urgent-Delegate':'q3','Eliminate':'q4'};
+
+// ── GLOBAL STATE ─────────────────────────────
+let currentDate = new Date();
+let meals=[], exercises=[], waterVal=0, stepsVal=0;
+let transactions={income:[],expense:[],variable:[]};
+let contacts=[], activeFin='income';
+let selectedCat={income:null,expense:null,variable:null};
+let charts={};
+let _mid=1, _eid=1, _tid=1, _cid=1;
+let ddDate=new Date();
+let dmDate=new Date();
+let activeDataTab='summary';
+
+// ── DATE UTILS ───────────────────────────────
+function dateKey(d){
+  const dt=d||currentDate;
+  const y=dt.getFullYear();
+  const m=String(dt.getMonth()+1).padStart(2,'0');
+  const day=String(dt.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function changeDate(n){currentDate.setDate(currentDate.getDate()+n);loadAll();}
+function updateDateDisplay(){
+  document.getElementById('date-display').textContent=
+    currentDate.toLocaleDateString('th-TH',{year:'2-digit',month:'2-digit',day:'2-digit'});
+}
+
+// ── PAGE ROUTING ─────────────────────────────
+function goPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='dash-daily') { ddDate=new Date(currentDate); renderDayDash(); }
+  if(name==='dash-month') renderMonthDash();
+  if(name==='data')       renderDataPage();
+}
+
+// ── SAVE / LOAD ──────────────────────────────
+function gatherData(){
+  const mm=document.querySelector('#morning-mood .mood-btn.active');
+  const em=document.querySelector('#evening-mood .mood-btn.active');
+  return{
+    morningMood:mm?mm.textContent:'',
+    eveningMood:em?em.textContent:'',
+    stress:document.getElementById('stress-sl').value,
+    morningThought:document.getElementById('morning-thought').value,
+    tasks:getTasks(),
+    meals, exercises,
+    water:waterVal, steps:stepsVal,
+    transactions, contacts,
+    unfinished:document.getElementById('unfinished').value,
+    nextDay:document.getElementById('next-day').value,
+    daySummary:document.getElementById('day-summary').value,
+  };
+}
+function save(){
+  try{
+    localStorage.setItem('5wp_'+dateKey(), JSON.stringify(gatherData()));
+  }catch(e){ console.warn('save failed',e); }
+  updateBar();
+}
+function loadDay(k){
+  try{
+    const r=localStorage.getItem('5wp_'+(k||dateKey()));
+    return r?JSON.parse(r):null;
+  }catch(e){return null;}
+}
+
+// ── TASKS ────────────────────────────────────
+function buildMatrix(){
+  const c=document.getElementById('matrix-container'); c.innerHTML='';
+  ['q1','q2','q3','q4'].forEach(q=>{
+    const m=QMETA[q];
+    const div=document.createElement('div'); div.className='quad';
+    div.innerHTML=`<div class="quad-head">
+      <span class="quad-tag" style="color:${m.color}">${m.label}</span>
+      <span class="quad-hint">${m.hint}</span>
+    </div><div class="task-list" id="${q}"></div>`;
+    c.appendChild(div);
+    for(let i=0;i<5;i++){
+      const row=document.createElement('div'); row.className='task-row';
+      row.innerHTML=`<div class="task-cb" data-q="${q}" data-i="${i}" onclick="toggleTask(this)"></div>
+        <input class="task-inp" type="text" placeholder="${i+1}." data-q="${q}" data-i="${i}" oninput="save()">`;
+      document.getElementById(q).appendChild(row);
+    }
+  });
+}
+function toggleTask(el){
+  el.classList.toggle('done');
+  el.nextElementSibling.classList.toggle('done',el.classList.contains('done'));
+  save();
+}
+function getTasks(){
+  const r={};
+  ['q1','q2','q3','q4'].forEach(q=>{
+    r[q]=[];
+    document.querySelectorAll(`.task-inp[data-q="${q}"]`).forEach((inp,i)=>{
+      const cb=document.querySelector(`.task-cb[data-q="${q}"][data-i="${i}"]`);
+      r[q].push({text:inp.value, done:cb?cb.classList.contains('done'):false});
+    });
+  });
+  return r;
+}
+function setTasks(tasks){
+  if(!tasks)return;
+  ['q1','q2','q3','q4'].forEach(q=>{
+    (tasks[q]||[]).forEach((t,i)=>{
+      const inp=document.querySelector(`.task-inp[data-q="${q}"][data-i="${i}"]`);
+      const cb =document.querySelector(`.task-cb[data-q="${q}"][data-i="${i}"]`);
+      if(!inp||!cb)return;
+      inp.value=t.text||'';
+      cb.classList.toggle('done',!!t.done);
+      inp.classList.toggle('done',!!t.done);
+    });
+  });
+}
+
+// ── MEALS ────────────────────────────────────
+function addMeal(data){
+  const id=data?data.id:_mid++;
+  meals.push(data?{...data,id}:{id,name:`มื้อที่ ${meals.length+1}`,items:[]});
+  renderMeals();
+}
+function renderMeals(){
+  const c=document.getElementById('meals-container'); c.innerHTML='';
+  meals.forEach(m=>{
+    const tt=mealTotals(m.items);
+    const div=document.createElement('div'); div.className='meal-card';
+    div.innerHTML=`
+      <div class="meal-top">
+        <input class="meal-name-inp" type="text" value="${escHtml(m.name||'')}" onchange="updMealName(${m.id},this.value)">
+        <span class="meal-kcal-total" id="mtt-${m.id}">${Math.round(tt.kcal)} kcal</span>
+        <button class="del-x" onclick="removeMeal(${m.id})" style="margin-left:8px;">×</button>
+      </div>
+      <div class="meal-body">
+        <div class="food-header">
+          <span class="fh" style="text-align:left">เมนู</span>
+          <span class="fh">kcal</span><span class="fh">P g</span><span class="fh">C g</span><span class="fh">F g</span><span class="fh"></span>
+        </div>
+        <div id="fi-${m.id}"></div>
+        <button class="add-row" onclick="addFoodItem(${m.id})">เพิ่มเมนู</button>
+      </div>`;
+    c.appendChild(div);
+    renderFoodItems(m.id);
+  });
+  calcAllTotals();
+}
+function renderFoodItems(mealId){
+  const m=meals.find(x=>x.id===mealId); if(!m)return;
+  const el=document.getElementById('fi-'+mealId); if(!el)return; el.innerHTML='';
+  m.items.forEach((item,idx)=>{
+    const row=document.createElement('div'); row.className='food-row';
+    row.innerHTML=`
+      <input class="food-inp" type="text" placeholder="ชื่อเมนู..." value="${escHtml(item.food||'')}" oninput="updFood(${mealId},${idx},'food',this.value)">
+      <input class="food-num" type="number" placeholder="0" value="${item.kcal||''}" min="0" oninput="updFood(${mealId},${idx},'kcal',this.value)">
+      <input class="food-num" type="number" placeholder="0" value="${item.pro||''}"  min="0" oninput="updFood(${mealId},${idx},'pro',this.value)">
+      <input class="food-num" type="number" placeholder="0" value="${item.carb||''}" min="0" oninput="updFood(${mealId},${idx},'carb',this.value)">
+      <input class="food-num" type="number" placeholder="0" value="${item.fat||''}"  min="0" oninput="updFood(${mealId},${idx},'fat',this.value)">
+      <button class="del-x" onclick="removeFood(${mealId},${idx})">×</button>`;
+    el.appendChild(row);
+  });
+}
+function addFoodItem(mealId){
+  const m=meals.find(x=>x.id===mealId); if(!m)return;
+  m.items.push({food:'',kcal:'',pro:'',carb:'',fat:''});
+  renderFoodItems(mealId); calcAllTotals(); save();
+}
+function updFood(mealId,idx,field,val){
+  const m=meals.find(x=>x.id===mealId); if(!m||!m.items[idx])return;
+  m.items[idx][field]=val; calcAllTotals(); save();
+}
+function removeFood(mealId,idx){
+  const m=meals.find(x=>x.id===mealId); if(!m)return;
+  m.items.splice(idx,1); renderFoodItems(mealId); calcAllTotals(); save();
+}
+function removeMeal(id){meals=meals.filter(m=>m.id!==id); renderMeals(); save();}
+function updMealName(id,name){const m=meals.find(x=>x.id===id);if(m){m.name=name;save();}}
+function mealTotals(items){
+  return(items||[]).reduce((s,i)=>({
+    kcal:s.kcal+(parseFloat(i.kcal)||0),
+    pro: s.pro +(parseFloat(i.pro)||0),
+    carb:s.carb+(parseFloat(i.carb)||0),
+    fat: s.fat +(parseFloat(i.fat)||0),
+  }),{kcal:0,pro:0,carb:0,fat:0});
+}
+function calcAllTotals(){
+  const all=meals.flatMap(m=>m.items||[]);
+  const t=mealTotals(all);
+  document.getElementById('t-kcal').textContent=Math.round(t.kcal);
+  document.getElementById('t-pro').textContent=Math.round(t.pro);
+  document.getElementById('t-carb').textContent=Math.round(t.carb);
+  document.getElementById('t-fat').textContent=Math.round(t.fat);
+  meals.forEach(m=>{
+    const el=document.getElementById('mtt-'+m.id);
+    if(el)el.textContent=Math.round(mealTotals(m.items).kcal)+' kcal';
+  });
+  save();
+}
+
+// ── EXERCISE ─────────────────────────────────
+function addExercise(data){
+  const id=data?data.id:_eid++;
+  exercises.push(data?{...data,id}:{id,type:EX_TYPES[0],detail:'',kcal:''});
+  renderEx();
+}
+function renderEx(){
+  const el=document.getElementById('ex-list'); el.innerHTML='';
+  exercises.forEach(ex=>{
+    const row=document.createElement('div'); row.className='ex-row';
+    row.innerHTML=`
+      <select style="font-size:12px;padding:7px 8px;" onchange="updEx(${ex.id},'type',this.value)">
+        ${EX_TYPES.map(t=>`<option ${t===ex.type?'selected':''}>${escHtml(t)}</option>`).join('')}
+      </select>
+      <input type="text" placeholder="รายละเอียด..." value="${escHtml(ex.detail||'')}" style="font-size:12px;" oninput="updEx(${ex.id},'detail',this.value)">
+      <input type="number" placeholder="kcal" value="${ex.kcal||''}" min="0" style="font-size:12px;font-family:'IBM Plex Mono',monospace;text-align:right;" oninput="updEx(${ex.id},'kcal',this.value)">
+      <button class="del-x" onclick="removeEx(${ex.id})">×</button>`;
+    el.appendChild(row);
+  });
+  save();
+}
+function updEx(id,f,v){const e=exercises.find(x=>x.id===id);if(e){e[f]=v;save();}}
+function removeEx(id){exercises=exercises.filter(x=>x.id!==id);renderEx();}
+
+// ── WATER & STEPS ─────────────────────────────
+function setWater(v){
+  waterVal=Math.max(0,Math.round(parseFloat(v))||0);
+  document.getElementById('water-inp').value=waterVal;
+  document.getElementById('water-bar').style.width=Math.min(100,waterVal/25)+'%';
+  document.getElementById('water-hint').textContent=waterVal.toLocaleString()+' / 2500 ml';
+  save();
+}
+function addWater(n){setWater(waterVal+n);}
+function setSteps(v){
+  stepsVal=Math.max(0,Math.round(parseFloat(v))||0);
+  document.getElementById('steps-inp').value=stepsVal;
+  document.getElementById('steps-bar').style.width=Math.min(100,stepsVal/100)+'%';
+  document.getElementById('steps-hint').textContent=stepsVal.toLocaleString()+' / 10000 steps';
+  save();
+}
+function addSteps(n){setSteps(stepsVal+n);}
+
+// ── FINANCE ──────────────────────────────────
+function switchFin(tab){
+  activeFin=tab;
+  ['income','expense','variable'].forEach(t=>{
+    document.getElementById('fp-'+t).style.display=t===tab?'':'none';
+    const b=document.getElementById('ft-'+t);
+    b.className='fin-tab'+(t===tab?(' '+(t==='income'?'act-inc':t==='expense'?'act-exp':'act-var')):'');
+  });
+  renderCatRail(tab);
+}
+function renderCatRail(type){
+  const el=document.getElementById('cr-'+type); el.innerHTML='';
+  CATS[type].forEach(cat=>{
+    const btn=document.createElement('button'); btn.className='cat-chip';
+    if(selectedCat[type]===cat)btn.classList.add('act');
+    btn.textContent=cat;
+    btn.onclick=()=>{selectedCat[type]=selectedCat[type]===cat?null:cat;renderCatRail(type);};
+    el.appendChild(btn);
+  });
+}
+function addTxn(type){
+  const id=_tid++;
+  const cat=selectedCat[type]||CATS[type][0];
+  transactions[type].push({id,cat,note:'',amount:''});
+  renderTxns(type); save();
+}
+function renderTxns(type){
+  const el=document.getElementById('txn-'+type); el.innerHTML='';
+  const clr=type==='income'?'var(--grn)':type==='expense'?'var(--red)':'var(--g700)';
+  transactions[type].forEach(txn=>{
+    const row=document.createElement('div'); row.className='txn-row';
+    row.innerHTML=`
+      <span class="txn-badge" style="color:${clr}">${escHtml(txn.cat)}</span>
+      <input class="txn-note-inp" type="text" placeholder="รายละเอียด..." value="${escHtml(txn.note||'')}" oninput="updTxn('${type}',${txn.id},'note',this.value)">
+      <input class="txn-amt" type="number" placeholder="0" value="${txn.amount||''}" min="0" style="color:${clr}" oninput="updTxn('${type}',${txn.id},'amount',this.value)">
+      <button class="del-x" onclick="delTxn('${type}',${txn.id})">×</button>`;
+    el.appendChild(row);
+  });
+  updateFinTotals();
+}
+function updTxn(type,id,f,v){
+  const t=transactions[type].find(x=>x.id==id);
+  if(t){t[f]=f==='amount'?parseFloat(v)||0:v; updateFinTotals(); save();}
+}
+function delTxn(type,id){
+  transactions[type]=transactions[type].filter(x=>x.id!=id); renderTxns(type);
+}
+function updateFinTotals(){
+  const inc=transactions.income.reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+  const exp=[...transactions.expense,...transactions.variable].reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+  const bal=inc-exp;
+  document.getElementById('total-inc').textContent='฿'+inc.toLocaleString();
+  document.getElementById('total-exp').textContent='฿'+exp.toLocaleString();
+  const be=document.getElementById('total-bal');
+  be.textContent=(bal<0?'−':'')+'฿'+Math.abs(bal).toLocaleString();
+  be.style.color=bal>=0?'var(--grn)':'var(--red)';
+}
+
+// ── CONTACTS ─────────────────────────────────
+function addContact(data){
+  const id=data?data.id:_cid++;
+  contacts.push(data?{...data,id}:{id,name:'',actions:[],note:''});
+  renderContacts(); save();
+}
+function renderContacts(){
+  const el=document.getElementById('contact-list'); el.innerHTML='';
+  contacts.forEach(c=>{
+    const div=document.createElement('div'); div.className='contact-block';
+    div.innerHTML=`
+      <div class="contact-top">
+        <input class="contact-name-inp" type="text" value="${escHtml(c.name||'')}" placeholder="ชื่อ / บริษัท..." oninput="updContact(${c.id},'name',this.value)">
+        <button class="del-x" onclick="delContact(${c.id})">×</button>
+      </div>
+      <div class="lbl">ช่องทางติดต่อ</div>
+      <div class="act-pills" id="ap-${c.id}"></div>
+      <div class="lbl" style="margin-top:8px;">Note / ธุระ</div>
+      <textarea rows="2" placeholder="ต้องพูดถึง / สิ่งที่ต้องทำ..." oninput="updContact(${c.id},'note',this.value)">${escHtml(c.note||'')}</textarea>`;
+    el.appendChild(div);
+    renderActPills(c.id,c.actions||[]);
+  });
+}
+function renderActPills(cid,selected){
+  const el=document.getElementById('ap-'+cid); if(!el)return; el.innerHTML='';
+  CONTACT_ACTIONS.forEach(a=>{
+    const btn=document.createElement('button'); btn.className='act-pill';
+    if((selected||[]).includes(a))btn.classList.add('act');
+    btn.textContent=a;
+    btn.onclick=()=>{
+      const c=contacts.find(x=>x.id===cid); if(!c)return;
+      if(!c.actions)c.actions=[];
+      const i=c.actions.indexOf(a);
+      if(i>=0)c.actions.splice(i,1); else c.actions.push(a);
+      renderActPills(cid,c.actions); save();
+    };
+    el.appendChild(btn);
+  });
+}
+function updContact(id,f,v){
+  const c=contacts.find(x=>x.id===id);
+  if(c){c[f]=v; if(f==='name')renderContacts(); save();}
+}
+function delContact(id){contacts=contacts.filter(x=>x.id!==id);renderContacts();save();}
+
+// ── MOOD ─────────────────────────────────────
+function selMood(btn,section){
+  document.querySelectorAll('#'+section+'-mood .mood-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); save();
+}
+
+// ── BOTTOM BAR ───────────────────────────────
+function updateBar(){
+  const all=meals.flatMap(m=>m.items||[]);
+  const t=mealTotals(all);
+  document.getElementById('b-kcal').textContent=Math.round(t.kcal)||0;
+  document.getElementById('b-water').textContent=waterVal>=1000?(waterVal/1000).toFixed(1)+'L':waterVal+'ml';
+  document.getElementById('b-steps').textContent=stepsVal>=1000?Math.round(stepsVal/100)/10+'k':stepsVal;
+
+  let done=0,total=0;
+  document.querySelectorAll('.task-inp').forEach(i=>{
+    if(i.value){
+      total++;
+      const cb=document.querySelector(`.task-cb[data-q="${i.dataset.q}"][data-i="${i.dataset.i}"]`);
+      if(cb&&cb.classList.contains('done'))done++;
+    }
+  });
+  document.getElementById('b-tasks').textContent=done+'/'+total;
+
+  const inc=transactions.income.reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+  const exp=[...transactions.expense,...transactions.variable].reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+  const bal=inc-exp;
+  const bb=document.getElementById('b-bal');
+  bb.textContent=(bal<0?'−':'')+'฿'+Math.abs(bal).toLocaleString();
+  bb.style.color=bal>=0?'var(--grn)':'var(--red)';
+
+  const mm=document.querySelector('#morning-mood .mood-btn.active')?1:0;
+  const em=document.querySelector('#evening-mood .mood-btn.active')?1:0;
+  const tp=total>0?done/total:0;
+  const wp=Math.min(1,waterVal/2500);
+  const sp=Math.min(1,stepsVal/10000);
+  document.getElementById('score-ring').textContent=Math.round(tp*30+wp*20+sp*20+mm*15+em*15);
+}
+
+// ── SCORE HELPER ─────────────────────────────
+function dayScore(r){
+  if(!r)return 0;
+  const ts=r.tasks||{};let dn=0,tt=0;
+  Object.values(ts).forEach(arr=>arr.forEach(t=>{if(t.text){tt++;if(t.done)dn++;}}));
+  const tp=tt>0?dn/tt:0;
+  const wp=Math.min(1,(r.water||0)/2500);
+  const sp=Math.min(1,(r.steps||0)/10000);
+  const mm=r.morningMood?1:0;
+  const em=r.eveningMood?1:0;
+  return Math.round(tp*30+wp*20+sp*20+mm*15+em*15);
+}
+
+// ── CHART HELPERS ─────────────────────────────
+function destroyChart(id){if(charts[id]){try{charts[id].destroy();}catch(e){}delete charts[id];}}
+function lineDs(data,col){
+  return{data,borderColor:col,backgroundColor:'transparent',
+    borderWidth:1.5,tension:0.3,pointRadius:2.5,pointBackgroundColor:col,spanGaps:true};
+}
+function baseOpts(extra){
+  return{responsive:true,spanGaps:true,
+    plugins:{legend:{display:false},...(extra&&extra.plugins||{})},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:8,family:'IBM Plex Mono'}}},
+      y:{grid:{color:'#eee'},ticks:{font:{size:8,family:'IBM Plex Mono'}}},
+      ...(extra&&extra.scales||{})
+    }};
+}
+
+// ── DASHBOARD: DAY VIEW ───────────────────────
+function changeDDDate(n){ddDate.setDate(ddDate.getDate()+n);renderDayDash();}
+
+function renderDayDash(){
+  const dk=dateKey(ddDate);
+  const r=loadDay(dk);
+
+  document.getElementById('dd-title').textContent=
+    ddDate.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('dd-date-disp').textContent=
+    ddDate.toLocaleDateString('th-TH',{year:'2-digit',month:'2-digit',day:'2-digit'});
+
+  const mT=r?mealTotals((r.meals||[]).flatMap(m=>m.items||[])):null;
+  const inc=r?(r.transactions?.income||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0):0;
+  const expFix=r?(r.transactions?.expense||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0):0;
+  const expVar=r?(r.transactions?.variable||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0):0;
+  const exp=expFix+expVar; const bal=inc-exp;
+  const ts=r?(r.tasks||{}):{};let dn=0,tt=0;
+  Object.values(ts).forEach(arr=>arr.forEach(t=>{if(t.text){tt++;if(t.done)dn++;}}));
+
+  function sv(id,val,cls){
+    const e=document.getElementById(id); if(!e)return;
+    e.textContent=val||'—'; if(cls)e.style.color=cls;
+  }
+
+  // KPI strip
+  sv('dd-score',  r?dayScore(r)+'pts':null);
+  sv('dd-kcal',   mT?Math.round(mT.kcal):null);
+  sv('dd-steps',  r?(r.steps||0).toLocaleString():null);
+  sv('dd-water',  r?((r.water||0)>=1000?((r.water/1000).toFixed(1)+'L'):(r.water||0)+'ml'):null);
+  sv('dd-tasks',  r?(dn+'/'+tt):null);
+  const bel=document.getElementById('dd-bal');
+  if(bel){bel.textContent=r?((bal<0?'−':'')+'฿'+Math.abs(bal).toLocaleString()):'—';bel.style.color=r?(bal>=0?'var(--grn)':'var(--red)'):'inherit';}
+
+  // Detail stats
+  sv('dd-d-kcal',  mT?Math.round(mT.kcal)+' kcal':null);
+  sv('dd-d-pro',   mT?Math.round(mT.pro)+'g':null);
+  sv('dd-d-carb',  mT?Math.round(mT.carb)+'g':null);
+  sv('dd-d-fat',   mT?Math.round(mT.fat)+'g':null);
+  sv('dd-d-water', r?(r.water||0).toLocaleString()+' ml':null);
+  sv('dd-d-steps', r?(r.steps||0).toLocaleString()+' steps':null);
+  const di=document.getElementById('dd-d-inc'); if(di){di.textContent=r?'฿'+inc.toLocaleString():'—';di.style.color=r?'var(--grn)':'inherit';}
+  const de=document.getElementById('dd-d-exp'); if(de){de.textContent=r?'฿'+expFix.toLocaleString():'—';de.style.color=r?'var(--red)':'inherit';}
+  const dv=document.getElementById('dd-d-var'); if(dv){dv.textContent=r?'฿'+expVar.toLocaleString():'—';dv.style.color=r?'var(--red)':'inherit';}
+  const db2=document.getElementById('dd-d-bal'); if(db2){db2.textContent=r?((bal<0?'−':'')+'฿'+Math.abs(bal).toLocaleString()):'—';db2.style.color=r?(bal>=0?'var(--grn)':'var(--red)'):'inherit';}
+  sv('dd-d-tasks',   r?(dn+'/'+tt):null);
+  sv('dd-d-taskpct', r&&tt>0?Math.round(dn/tt*100)+'%':null);
+  sv('dd-d-mmood',   r?r.morningMood:null);
+  sv('dd-d-emood',   r?r.eveningMood:null);
+  sv('dd-d-stress',  r?(r.stress+'/10'):null);
+  sv('dd-d-thought', r?r.morningThought:null);
+  sv('dd-d-contacts',r?((r.contacts||[]).length+' คน'):null);
+  sv('dd-d-nextday', r?r.nextDay:null);
+
+  // Task detail quadrants
+  ['q1','q2','q3','q4'].forEach(q=>{
+    const el=document.getElementById('dd-t'+q); if(!el)return;
+    const items=(ts[q]||[]).filter(t=>t.text);
+    el.innerHTML=items.length?items.map(t=>`
+      <div style="display:flex;align-items:center;gap:6px;padding:3px 0;">
+        <div style="width:8px;height:8px;border:1px solid ${t.done?'var(--grn)':'var(--g300)'};background:${t.done?'var(--grn)':'transparent'};flex-shrink:0;"></div>
+        <span style="font-size:11px;${t.done?'text-decoration:line-through;color:var(--g400);':''}">${escHtml(t.text)}</span>
+      </div>`).join(''):'<span style="font-size:11px;color:var(--g300);">—</span>';
+  });
+
+  // Radar
+  destroyChart('dd-radar');
+  const rd=[
+    r?Math.round((Math.min(1,(r.water||0)/2500)*50+Math.min(1,(r.steps||0)/10000)*50)):0,
+    tt>0?Math.round(dn/tt*100):0,
+    inc>0?Math.min(100,Math.round(bal>=0?80+Math.min(20,bal/inc*20):Math.max(0,80+bal/inc*80))):0,
+    r&&r.morningMood?75:0,
+    r&&(r.contacts||[]).length>0?80:0
+  ];
+  charts['dd-radar']=new Chart(document.getElementById('dd-radar'),{
+    type:'radar',
+    data:{labels:['Physical','Tasks','Finance','Mental','Social'],
+      datasets:[{data:rd,backgroundColor:'rgba(26,26,26,0.07)',borderColor:'rgba(26,26,26,0.7)',
+        borderWidth:1.5,pointBackgroundColor:'#1a1a1a',pointRadius:3}]},
+    options:{responsive:true,scales:{r:{min:0,max:100,ticks:{display:false},
+      grid:{color:'#eee'},pointLabels:{font:{size:10,family:'IBM Plex Sans'}}}},
+      plugins:{legend:{display:false}}}
+  });
+
+  // 7-day trend
+  const days7=[];
+  for(let i=6;i>=0;i--){const d=new Date(ddDate);d.setDate(d.getDate()-i);
+    days7.push({key:dateKey(d),label:d.toLocaleDateString('th-TH',{weekday:'narrow',day:'numeric'})});}
+  const lbl7=days7.map(d=>d.label);
+  const mk7=(fn)=>days7.map(d=>{const rv=loadDay(d.key);return rv!==null?fn(rv):NaN;});
+  const kcals7=mk7(rv=>{const all=(rv.meals||[]).flatMap(m=>m.items||[]);return Math.round(mealTotals(all).kcal);});
+  const incs7 =mk7(rv=>(rv.transactions?.income||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0));
+  const exps7 =mk7(rv=>[...(rv.transactions?.expense||[]),...(rv.transactions?.variable||[])].reduce((s,t)=>s+(parseFloat(t.amount)||0),0));
+  const stps7 =mk7(rv=>rv.steps||0);
+  const tpct7 =mk7(rv=>{const ts2=rv.tasks||{};let d2=0,t2=0;Object.values(ts2).forEach(a=>a.forEach(t=>{if(t.text){t2++;if(t.done)d2++;}}));return t2>0?Math.round(d2/t2*100):0;});
+
+  destroyChart('dd-kcal-c');  charts['dd-kcal-c'] =new Chart(document.getElementById('dd-kcal-c'), {type:'line',data:{labels:lbl7,datasets:[lineDs(kcals7,'#1a1a1a')]},options:baseOpts()});
+  destroyChart('dd-fin-c');   charts['dd-fin-c']  =new Chart(document.getElementById('dd-fin-c'),  {type:'line',data:{labels:lbl7,datasets:[lineDs(incs7,'#27604a'),lineDs(exps7,'#c0392b')]},options:baseOpts({plugins:{legend:{display:true,labels:{font:{size:9,family:'IBM Plex Sans'},boxWidth:8}}}})});
+  destroyChart('dd-steps-c'); charts['dd-steps-c']=new Chart(document.getElementById('dd-steps-c'),{type:'line',data:{labels:lbl7,datasets:[lineDs(stps7,'#1a1a1a')]},options:baseOpts()});
+  destroyChart('dd-task-c');  charts['dd-task-c'] =new Chart(document.getElementById('dd-task-c'), {type:'line',data:{labels:lbl7,datasets:[lineDs(tpct7,'#1a1a1a')]},options:baseOpts({scales:{y:{min:0,max:100,grid:{color:'#eee'},ticks:{font:{size:8,family:'IBM Plex Mono'}}}}})});
+}
+
+// ── DASHBOARD: MONTHLY ────────────────────────
+function changeDMMonth(n){dmDate.setMonth(dmDate.getMonth()+n);renderMonthDash();}
+
+function getMonthDays(y,m){
+  const days=[];
+  for(let d=1;d<=new Date(y,m+1,0).getDate();d++){
+    const dt=new Date(y,m,d);
+    days.push({key:dateKey(dt),date:dt,day:d,dow:dt.getDay()});
+  }
+  return days;
+}
+
+function renderMonthDash(){
+  const y=dmDate.getFullYear(), mo=dmDate.getMonth();
+  const days=getMonthDays(y,mo);
+  document.getElementById('dm-title').textContent=new Date(y,mo,1).toLocaleDateString('th-TH',{year:'numeric',month:'long'});
+  document.getElementById('dm-month-disp').textContent=new Date(y,mo,1).toLocaleDateString('th-TH',{year:'2-digit',month:'2-digit'});
+
+  const recs=days.map(d=>({...d,r:loadDay(d.key)}));
+  const logged=recs.filter(d=>d.r);
+  const n=logged.length||1;
+  let totInc=0,totExpFix=0,totExpVar=0,totKcal=0,totPro=0,totCarb=0,totFat=0,totSteps=0,totScore=0;
+  let taskDone=0,taskTotal=0; const catExp={};
+
+  logged.forEach(({r})=>{
+    const inc=(r.transactions?.income||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    const ef =(r.transactions?.expense||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    const ev =(r.transactions?.variable||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    totInc+=inc; totExpFix+=ef; totExpVar+=ev;
+    [...(r.transactions?.expense||[]),...(r.transactions?.variable||[])].forEach(t=>{catExp[t.cat]=(catExp[t.cat]||0)+(parseFloat(t.amount)||0);});
+    const mac=mealTotals((r.meals||[]).flatMap(m=>m.items||[]));
+    totKcal+=mac.kcal; totPro+=mac.pro; totCarb+=mac.carb; totFat+=mac.fat;
+    totSteps+=(r.steps||0); totScore+=dayScore(r);
+    const ts2=r.tasks||{};Object.values(ts2).forEach(arr=>arr.forEach(t=>{if(t.text){taskTotal++;if(t.done)taskDone++;}}));
+  });
+  const totExp=totExpFix+totExpVar; const bal=totInc-totExp;
+  const taskRate=taskTotal>0?Math.round(taskDone/taskTotal*100):0;
+
+  function sk(id,val,col){const e=document.getElementById(id);if(e){e.textContent=val;if(col)e.style.color=col;}}
+  sk('dm-days',  logged.length+' / '+days.length);
+  sk('dm-score', Math.round(totScore/n)+'pts');
+  sk('dm-inc',   '฿'+Math.round(totInc).toLocaleString(), 'var(--grn)');
+  sk('dm-exp',   '฿'+Math.round(totExp).toLocaleString(), 'var(--red)');
+  const dmb=document.getElementById('dm-bal');
+  if(dmb){dmb.textContent=(bal<0?'−':'')+'฿'+Math.abs(Math.round(bal)).toLocaleString();dmb.style.color=bal>=0?'var(--grn)':'var(--red)';}
+  sk('dm-kcal',    Math.round(totKcal/n));
+  sk('dm-steps',   Math.round(totSteps/n).toLocaleString());
+  sk('dm-taskpct', taskRate+'%');
+  sk('dm-avg-kcal',Math.round(totKcal/n));
+  sk('dm-avg-pro', Math.round(totPro/n));
+  sk('dm-avg-carb',Math.round(totCarb/n));
+  sk('dm-avg-fat', Math.round(totFat/n));
+
+  const dlabels=days.map(d=>d.day);
+  const getMk=(fn)=>days.map(d=>d.r?fn(d.r):NaN);
+
+  destroyChart('dm-fin-c');
+  charts['dm-fin-c']=new Chart(document.getElementById('dm-fin-c'),{type:'bar',
+    data:{labels:dlabels,datasets:[
+      {label:'Income',data:getMk(r=>(r.transactions?.income||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0)),backgroundColor:'rgba(39,96,74,0.7)',borderWidth:0,borderRadius:1},
+      {label:'Expense',data:getMk(r=>[...(r.transactions?.expense||[]),...(r.transactions?.variable||[])].reduce((s,t)=>s+(parseFloat(t.amount)||0),0)),backgroundColor:'rgba(192,57,43,0.6)',borderWidth:0,borderRadius:1}
+    ]},
+    options:{responsive:true,spanGaps:true,plugins:{legend:{display:true,labels:{font:{size:9,family:'IBM Plex Sans'},boxWidth:8}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:8,family:'IBM Plex Mono'}}},y:{grid:{color:'#eee'},ticks:{font:{size:8,family:'IBM Plex Mono'}}}}}
+  });
+
+  const topCats=Object.entries(catExp).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  destroyChart('dm-donut-c');
+  if(topCats.length)charts['dm-donut-c']=new Chart(document.getElementById('dm-donut-c'),{type:'doughnut',
+    data:{labels:topCats.map(c=>c[0]),datasets:[{data:topCats.map(c=>Math.round(c[1])),backgroundColor:['#1a1a1a','#444','#777','#999','#bbb','#ddd'],borderWidth:0}]},
+    options:{responsive:true,cutout:'65%',plugins:{legend:{display:true,position:'right',labels:{font:{size:9,family:'IBM Plex Sans'},boxWidth:8,padding:8}}}}
+  });
+
+  destroyChart('dm-kcal-c');
+  charts['dm-kcal-c']=new Chart(document.getElementById('dm-kcal-c'),{type:'line',data:{labels:dlabels,datasets:[lineDs(getMk(r=>{const all=(r.meals||[]).flatMap(m=>m.items||[]);return Math.round(mealTotals(all).kcal);}),'#1a1a1a')]},options:baseOpts()});
+  destroyChart('dm-steps-c');
+  charts['dm-steps-c']=new Chart(document.getElementById('dm-steps-c'),{type:'line',data:{labels:dlabels,datasets:[lineDs(getMk(r=>r.steps||0),'#1a1a1a')]},options:baseOpts()});
+  destroyChart('dm-stress-c');
+  charts['dm-stress-c']=new Chart(document.getElementById('dm-stress-c'),{type:'line',data:{labels:dlabels,datasets:[lineDs(getMk(r=>parseFloat(r.stress)||0),'#c0392b')]},
+    options:baseOpts({scales:{y:{min:0,max:10,grid:{color:'#eee'},ticks:{font:{size:8,family:'IBM Plex Mono'}}}}})});
+  destroyChart('dm-macro-c');
+  charts['dm-macro-c']=new Chart(document.getElementById('dm-macro-c'),{type:'bar',
+    data:{labels:['Protein','Carbs','Fat'],datasets:[{data:[Math.round(totPro/n),Math.round(totCarb/n),Math.round(totFat/n)],backgroundColor:['#1a1a1a','#888','#ddd'],borderWidth:0,borderRadius:1}]},
+    options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'#eee'},ticks:{font:{size:9,family:'IBM Plex Mono'}}},y:{grid:{display:false},ticks:{font:{size:9,family:'IBM Plex Mono'}}}}}
+  });
+
+  // Heatmap
+  const hm=document.getElementById('dm-heatmap'); hm.innerHTML='';
+  const dayNames=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  const lr=document.createElement('div'); lr.className='hm-label-row';
+  dayNames.forEach(d=>{const s=document.createElement('div');s.className='hm-day-lbl';s.textContent=d;lr.appendChild(s);});
+  hm.appendChild(lr);
+  const grid=document.createElement('div'); grid.className='hm-grid';
+  for(let i=0;i<days[0].dow;i++){const c=document.createElement('div');c.className='hm-cell hm-empty';grid.appendChild(c);}
+  days.forEach(d=>{
+    const c=document.createElement('div');
+    const ts2=d.r?(d.r.tasks||{}):{};let dn2=0,tt2=0;
+    Object.values(ts2).forEach(arr=>arr.forEach(t=>{if(t.text){tt2++;if(t.done)dn2++;}}));
+    const pct=tt2>0?dn2/tt2:0;
+    const lvl=d.r?(pct>=0.75?4:pct>=0.5?3:pct>=0.25?2:1):0;
+    c.className=`hm-cell hm-${lvl}`;c.textContent=d.day;
+    c.title=d.r?`${d.day}: ${dn2}/${tt2} tasks`:d.day+': no data';
+    grid.appendChild(c);
+  });
+  hm.appendChild(grid);
+  const leg=document.createElement('div');
+  leg.style.cssText='display:flex;align-items:center;gap:6px;margin-top:8px;font-size:9px;color:var(--g400);letter-spacing:0.06em;';
+  leg.innerHTML='Less <div style="width:9px;height:9px;background:var(--g50);border:1px solid var(--g200);"></div><div style="width:9px;height:9px;background:#e8ede9;border:1px solid var(--g200);"></div><div style="width:9px;height:9px;background:#c8ddc9;"></div><div style="width:9px;height:9px;background:#9ec4a0;"></div><div style="width:9px;height:9px;background:#5a9e5c;"></div> More';
+  hm.appendChild(leg);
+
+  // Insight
+  const ins=document.getElementById('dm-insight'); ins.innerHTML='';
+  const insights=[];
+  if(!logged.length){insights.push({dot:'#aaa',txt:'ยังไม่มีข้อมูลในเดือนนี้'});}
+  else{
+    const avgKcal=Math.round(totKcal/n),avgSteps=Math.round(totSteps/n);
+    insights.push({dot:avgKcal<1200||avgKcal>2500?'#c0392b':'#27604a',txt:`Avg calories <b>${avgKcal} kcal/วัน</b>${avgKcal<1200?' — อาจต่ำเกินไป':avgKcal>2500?' — สูงกว่า target':' — อยู่ใน range ดี'}`});
+    insights.push({dot:avgSteps>=10000?'#27604a':'#888',txt:`Avg steps <b>${avgSteps.toLocaleString()}/วัน</b>${avgSteps>=10000?' — เกิน target แล้ว':' — ยังไม่ถึง 10k'}`});
+    insights.push({dot:bal>=0?'#27604a':'#c0392b',txt:`Balance <b>${bal>=0?'+':'−'}฿${Math.abs(Math.round(bal)).toLocaleString()}</b>${bal>=0?' — รายรับมากกว่ารายจ่าย':' — ขาดดุล ตรวจ variable expense'}`});
+    insights.push({dot:taskRate>=70?'#27604a':taskRate>=40?'#888':'#c0392b',txt:`Task rate <b>${taskRate}%</b>${taskRate>=70?' — ดีมาก':taskRate>=40?' — พอใช้':' — ต่ำมาก ลด overcommit'}`});
+    if(topCats.length)insights.push({dot:'#444',txt:`รายจ่ายสูงสุด: <b>${topCats[0][0]}</b> = ฿${Math.round(topCats[0][1]).toLocaleString()} (${Math.round(topCats[0][1]/totExp*100)}%)`});
+  }
+  insights.forEach(({dot,txt})=>{
+    const row=document.createElement('div'); row.className='insight-row';
+    row.innerHTML=`<div class="insight-dot" style="background:${dot};"></div><div class="insight-txt">${txt}</div>`;
+    ins.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  DATA PAGE — IMPORT / EXPORT / TABLE VIEW
+// ═══════════════════════════════════════════════
+
+// ── Storage helpers ───────────────────────────
+function getAllStoredKeys(){
+  const keys=[];
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith('5wp_'))keys.push(k.replace('5wp_',''));
+  }
+  return keys.sort();
+}
+function getAllRecords(){
+  return getAllStoredKeys().map(k=>({key:k,r:loadDay(k)})).filter(x=>x.r);
+}
+
+// ── Data page entry ───────────────────────────
+function renderDataPage(){
+  // Storage info
+  const keys=getAllStoredKeys();
+  let bytes=0;
+  keys.forEach(k=>{const v=localStorage.getItem('5wp_'+k);if(v)bytes+=v.length;});
+  const el=document.getElementById('data-storage-info');
+  if(el)el.textContent=keys.length+' records  ·  '+(bytes/1024).toFixed(1)+' KB stored locally';
+  renderDataTable();
+}
+
+function switchDataTab(tab,el){
+  activeDataTab=tab;
+  document.querySelectorAll('.dat-tab').forEach(b=>b.classList.remove('act'));
+  el.classList.add('act');
+  renderDataTable();
+}
+
+function renderDataTable(){
+  const wrap=document.getElementById('data-table-wrap'); if(!wrap)return;
+  const recs=getAllRecords();
+  if(!recs.length){
+    wrap.innerHTML='<div style="padding:32px;text-align:center;font-size:12px;color:var(--g400);">ยังไม่มีข้อมูล — กรอกข้อมูลที่ Daily tab แล้วกด save อัตโนมัติ</div>';
+    return;
+  }
+  const t=activeDataTab;
+  if(t==='summary')  buildSummaryTable(wrap,recs);
+  else if(t==='meals')    buildMealsTable(wrap,recs);
+  else if(t==='exercise') buildExTable(wrap,recs);
+  else if(t==='tasks')    buildTasksTable(wrap,recs);
+  else if(t==='finance')  buildFinTable(wrap,recs);
+  else if(t==='contacts') buildContactsTable(wrap,recs);
+}
+
+// ── Table builders ────────────────────────────
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function tblWrap(headers,bodyHtml){
+  return`<table class="data-tbl"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+}
+function emptyRow(colspan){return`<tr><td colspan="${colspan}" style="text-align:center;color:var(--g300);padding:20px;">ไม่มีข้อมูลในหมวดนี้</td></tr>`;}
+
+function buildSummaryTable(wrap,recs){
+  const H=['date','mood·am','mood·pm','stress','water·ml','steps','income·฿','expense·฿','balance·฿','tasks','note·morning','next·day'];
+  const rows=recs.map(({key,r})=>{
+    const inc=(r.transactions?.income||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    const exp=[...(r.transactions?.expense||[]),...(r.transactions?.variable||[])].reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    const bal=inc-exp;
+    const ts=r.tasks||{};let dn=0,tt=0;
+    Object.values(ts).forEach(arr=>arr.forEach(t=>{if(t.text){tt++;if(t.done)dn++;}}));
+    return`<tr>
+      <td class="tbl-date">${key}</td>
+      <td>${escHtml(r.morningMood||'—')}</td>
+      <td>${escHtml(r.eveningMood||'—')}</td>
+      <td>${r.stress||'—'}</td>
+      <td>${(r.water||0).toLocaleString()}</td>
+      <td>${(r.steps||0).toLocaleString()}</td>
+      <td class="tbl-pos">฿${Math.round(inc).toLocaleString()}</td>
+      <td class="tbl-neg">฿${Math.round(exp).toLocaleString()}</td>
+      <td class="${bal>=0?'tbl-pos':'tbl-neg'}">${bal>=0?'':'-'}฿${Math.abs(Math.round(bal)).toLocaleString()}</td>
+      <td>${dn}/${tt}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.morningThought||'—')}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.nextDay||'—')}</td>
+    </tr>`;
+  });
+  wrap.innerHTML=tblWrap(H, rows.join('')||emptyRow(H.length));
+}
+
+function buildMealsTable(wrap,recs){
+  const H=['date','meal','food','kcal','P·g','C·g','F·g'];
+  const rows=[];
+  recs.forEach(({key,r})=>{
+    (r.meals||[]).forEach(m=>{
+      if(!(m.items||[]).length){rows.push(`<tr><td class="tbl-date">${key}</td><td>${escHtml(m.name)}</td><td colspan="5" style="color:var(--g300);">— ไม่มีเมนู —</td></tr>`);return;}
+      m.items.forEach(item=>rows.push(`<tr>
+        <td class="tbl-date">${key}</td><td>${escHtml(m.name)}</td><td>${escHtml(item.food||'—')}</td>
+        <td>${item.kcal||0}</td><td>${item.pro||0}</td><td>${item.carb||0}</td><td>${item.fat||0}</td>
+      </tr>`));
+    });
+  });
+  wrap.innerHTML=tblWrap(H, rows.join('')||emptyRow(H.length));
+}
+
+function buildExTable(wrap,recs){
+  const H=['date','type','detail','kcal·burned'];
+  const rows=[];
+  recs.forEach(({key,r})=>(r.exercises||[]).forEach(e=>rows.push(`<tr>
+    <td class="tbl-date">${key}</td><td>${escHtml(e.type)}</td>
+    <td>${escHtml(e.detail||'—')}</td><td>${e.kcal||0}</td>
+  </tr>`)));
+  wrap.innerHTML=tblWrap(H, rows.join('')||emptyRow(H.length));
+}
+
+function buildTasksTable(wrap,recs){
+  const H=['date','quadrant','task','done'];
+  const rows=[];
+  recs.forEach(({key,r})=>{
+    const ts=r.tasks||{};
+    Object.entries(ts).forEach(([q,arr])=>{
+      (arr||[]).filter(t=>t.text).forEach(t=>rows.push(`<tr>
+        <td class="tbl-date">${key}</td><td>${QN_EXPORT[q]||q}</td>
+        <td>${escHtml(t.text)}</td>
+        <td class="${t.done?'tbl-pos':'tbl-neg'}">${t.done?'✓':'—'}</td>
+      </tr>`));
+    });
+  });
+  wrap.innerHTML=tblWrap(H, rows.join('')||emptyRow(H.length));
+}
+
+function buildFinTable(wrap,recs){
+  const H=['date','type','category','note','amount·฿'];
+  const rows=[];
+  recs.forEach(({key,r})=>{
+    Object.entries(r.transactions||{}).forEach(([type,list])=>{
+      (list||[]).forEach(t=>{
+        const amt=parseFloat(t.amount)||0;
+        rows.push(`<tr>
+          <td class="tbl-date">${key}</td>
+          <td>${TYPE_LABEL[type]||type}</td>
+          <td>${escHtml(t.cat)}</td>
+          <td>${escHtml(t.note||'—')}</td>
+          <td class="${type==='income'?'tbl-pos':'tbl-neg'}">${type==='income'?'+':'-'}฿${amt.toLocaleString()}</td>
+        </tr>`);
+      });
+    });
+  });
+  wrap.innerHTML=tblWrap(H, rows.join('')||emptyRow(H.length));
+}
+
+function buildContactsTable(wrap,recs){
+  const H=['date','name','channels','note'];
+  const rows=[];
+  recs.forEach(({key,r})=>(r.contacts||[]).forEach(c=>rows.push(`<tr>
+    <td class="tbl-date">${key}</td><td>${escHtml(c.name||'—')}</td>
+    <td>${escHtml((c.actions||[]).join(', ')||'—')}</td>
+    <td>${escHtml(c.note||'—')}</td>
+  </tr>`)));
+  wrap.innerHTML=tblWrap(H, rows.join('')||emptyRow(H.length));
+}
+
+// ── EXPORT ALL ────────────────────────────────
+function exportAllData(scope){
+  const allRecs=getAllRecords();
+  let recs=allRecs;
+  if(scope==='month'){
+    const y=new Date().getFullYear(), mo=new Date().getMonth();
+    recs=allRecs.filter(({key})=>{const d=new Date(key);return d.getFullYear()===y&&d.getMonth()===mo;});
+  }
+  if(!recs.length){
+    alert('ไม่มีข้อมูลที่จะ export\n\nกรอกข้อมูลที่ Daily tab ก่อน — ระบบ save อัตโนมัติทุกครั้งที่กรอก');
+    return;
+  }
+
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: DAILY_SUMMARY
+  const sH=['date','stress','mood_morning','mood_evening','water_ml','steps',
+            'income_thb','expense_fix_thb','expense_var_thb','balance_thb',
+            'tasks_done','tasks_total','morning_thought','unfinished','next_day','day_summary'];
+  const sR=recs.map(({key,r})=>{
+    const inc=(r.transactions?.income||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    const ef =(r.transactions?.expense||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    const ev =(r.transactions?.variable||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    const ts=r.tasks||{};let dn=0,tt=0;
+    Object.values(ts).forEach(arr=>arr.forEach(t=>{if(t.text){tt++;if(t.done)dn++;}}));
+    return[key,r.stress||'',r.morningMood||'',r.eveningMood||'',
+           r.water||0,r.steps||0,Math.round(inc),Math.round(ef),Math.round(ev),Math.round(inc-ef-ev),
+           dn,tt,r.morningThought||'',r.unfinished||'',r.nextDay||'',r.daySummary||''];
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([sH,...sR]),'DAILY_SUMMARY');
+
+  // Sheet 2: MEALS
+  const mH=['date','meal_name','food','kcal','protein_g','carb_g','fat_g'];
+  const mR=[];
+  recs.forEach(({key,r})=>(r.meals||[]).forEach(m=>{
+    if(!(m.items||[]).length){mR.push([key,m.name,'','','','','']);}
+    else m.items.forEach(i=>mR.push([key,m.name,i.food||'',parseFloat(i.kcal)||0,parseFloat(i.pro)||0,parseFloat(i.carb)||0,parseFloat(i.fat)||0]));
+  }));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([mH,...mR]),'MEALS');
+
+  // Sheet 3: EXERCISE
+  const eH=['date','type','detail','kcal_burned'];
+  const eR=[];
+  recs.forEach(({key,r})=>(r.exercises||[]).forEach(e=>eR.push([key,e.type||'',e.detail||'',parseFloat(e.kcal)||0])));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([eH,...eR]),'EXERCISE');
+
+  // Sheet 4: TASKS
+  const tH=['date','quadrant','task_text','done'];
+  const tR=[];
+  recs.forEach(({key,r})=>{
+    Object.entries(r.tasks||{}).forEach(([q,arr])=>{
+      (arr||[]).filter(t=>t.text).forEach(t=>tR.push([key,QN_EXPORT[q]||q,t.text,t.done?1:0]));
+    });
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([tH,...tR]),'TASKS');
+
+  // Sheet 5: FINANCE
+  const fH=['date','type','category','note','amount_thb'];
+  const fR=[];
+  recs.forEach(({key,r})=>{
+    Object.entries(r.transactions||{}).forEach(([type,list])=>{
+      (list||[]).forEach(t=>fR.push([key,TYPE_LABEL[type]||type,t.cat||'',t.note||'',parseFloat(t.amount)||0]));
+    });
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([fH,...fR]),'FINANCE');
+
+  // Sheet 6: CONTACTS
+  const cH=['date','name','actions','note'];
+  const cR=[];
+  recs.forEach(({key,r})=>(r.contacts||[]).forEach(c=>cR.push([key,c.name||'',(c.actions||[]).join('|'),c.note||''])));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([cH,...cR]),'CONTACTS');
+
+  // Sheet 7: README — instructions for import on new device
+  const readme=[
+    ['5 Wealth Planner — Data Backup'],
+    ['Export date', new Date().toLocaleString('th-TH')],
+    ['Records',     recs.length+' days'],
+    ['Scope',       scope==='month'?'เดือนนี้เท่านั้น':'ทั้งหมด'],
+    [''],
+    ['HOW TO IMPORT ON NEW DEVICE'],
+    ['1.','เปิดไฟล์ 5WealthPlanner_v*.html บน browser ของ device ใหม่'],
+    ['2.','ไปที่ tab "Data" (tab สุดท้าย)'],
+    ['3.','กดปุ่ม "Import .xlsx"'],
+    ['4.','เลือกไฟล์นี้'],
+    ['5.','ระบบจะ restore ข้อมูลทุกวันอัตโนมัติ'],
+    [''],
+    ['SHEETS — DO NOT RENAME'],
+    ['DAILY_SUMMARY','stress, mood, water, steps, finance totals, text notes'],
+    ['MEALS',        'รายการอาหารทุกมื้อทุกวัน'],
+    ['EXERCISE',     'การออกกำลังกาย'],
+    ['TASKS',        'tasks ทุก quadrant'],
+    ['FINANCE',      'ทุก transaction'],
+    ['CONTACTS',     'contacts รายวัน'],
+    [''],
+    ['NOTE','สามารถแก้ข้อมูลใน Excel แล้ว import กลับได้ — ระบบ merge ไม่ overwrite'],
+  ];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(readme),'README');
+
+  const fname='5WP_'+(scope==='month'?new Date().toISOString().slice(0,7):'all')+'_export_'+dateKey()+'.xlsx';
+  XLSX.writeFile(wb,fname);
+  const info=document.getElementById('export-info');
+  if(info)info.textContent='✓ Exported '+recs.length+' records → '+fname;
+}
+
+// ── IMPORT ALL ────────────────────────────────
+function importAllData(input){
+  const file=input.files[0]; input.value=''; if(!file)return;
+  const info=document.getElementById('import-info');
+  if(info)info.textContent='⏳ กำลัง import...';
+
+  const reader=new FileReader();
+  reader.onerror=()=>{if(info)info.textContent='✕ อ่านไฟล์ไม่ได้';};
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const missing=[];
+      ['DAILY_SUMMARY','MEALS','EXERCISE','TASKS','FINANCE','CONTACTS'].forEach(s=>{if(!wb.SheetNames.includes(s))missing.push(s);});
+      if(missing.length===6){
+        if(info)info.textContent='✕ ไฟล์ไม่ใช่ 5WP backup (ไม่พบ sheets ที่ต้องการ)';
+        alert('ไม่ใช่ไฟล์ 5 Wealth Planner\n\nใช้ได้เฉพาะไฟล์ที่ export จาก Data tab เท่านั้น');
+        return;
+      }
+
+      // Reconstruct day map
+      const dayMap={};
+      const ensureDay=key=>{
+        if(!dayMap[key]){
+          dayMap[key]=JSON.parse(JSON.stringify(
+            loadDay(key)||{
+              morningMood:'',eveningMood:'',stress:'3',morningThought:'',
+              tasks:{q1:[{text:'',done:false},{text:'',done:false},{text:'',done:false},{text:'',done:false},{text:'',done:false}],
+                     q2:[{text:'',done:false},{text:'',done:false},{text:'',done:false},{text:'',done:false},{text:'',done:false}],
+                     q3:[{text:'',done:false},{text:'',done:false},{text:'',done:false},{text:'',done:false},{text:'',done:false}],
+                     q4:[{text:'',done:false},{text:'',done:false},{text:'',done:false},{text:'',done:false},{text:'',done:false}]},
+              meals:[],exercises:[],water:0,steps:0,
+              transactions:{income:[],expense:[],variable:[]},
+              contacts:[],unfinished:'',nextDay:'',daySummary:'',
+            }
+          ));
+        }
+        return dayMap[key];
+      };
+      const isValidKey=k=>/^\d{4}-\d{2}-\d{2}$/.test(String(k).trim());
+      const getRows=sheet=>wb.SheetNames.includes(sheet)?XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,defval:''}).slice(1):[];
+
+      // 1. DAILY_SUMMARY
+      getRows('DAILY_SUMMARY').forEach(row=>{
+        const key=String(row[0]||'').trim(); if(!isValidKey(key))return;
+        const d=ensureDay(key);
+        if(row[1]!==''&&row[1]!=null) d.stress=String(row[1]);
+        if(row[2]!==''&&row[2]!=null) d.morningMood=String(row[2]);
+        if(row[3]!==''&&row[3]!=null) d.eveningMood=String(row[3]);
+        if(row[4]!==''&&row[4]!=null) d.water=parseFloat(row[4])||0;
+        if(row[5]!==''&&row[5]!=null) d.steps=parseFloat(row[5])||0;
+        if(row[12]!=null) d.morningThought=String(row[12]);
+        if(row[13]!=null) d.unfinished=String(row[13]);
+        if(row[14]!=null) d.nextDay=String(row[14]);
+        if(row[15]!=null) d.daySummary=String(row[15]);
+      });
+
+      // 2. MEALS — group by date + meal_name
+      const mealBuf={};
+      getRows('MEALS').forEach(row=>{
+        const key=String(row[0]||'').trim(); if(!isValidKey(key))return;
+        const mname=String(row[1]||'มื้อ');
+        if(!mealBuf[key])mealBuf[key]={};
+        if(!mealBuf[key][mname])mealBuf[key][mname]=[];
+        if(row[2]!=='') mealBuf[key][mname].push({food:String(row[2]),kcal:row[3]||'',pro:row[4]||'',carb:row[5]||'',fat:row[6]||''});
+      });
+      Object.entries(mealBuf).forEach(([key,names])=>{
+        const d=ensureDay(key);
+        const existing=new Set((d.meals||[]).map(m=>m.name));
+        let mid=(d.meals||[]).length+1;
+        Object.entries(names).forEach(([name,items])=>{if(!existing.has(name))d.meals.push({id:mid++,name,items});});
+      });
+
+      // 3. EXERCISE
+      getRows('EXERCISE').forEach(row=>{
+        const key=String(row[0]||'').trim(); if(!isValidKey(key))return;
+        const d=ensureDay(key);
+        if(!d.exercises)d.exercises=[];
+        const type=String(row[1]||''), detail=String(row[2]||''), kcal=row[3]||'';
+        const exists=d.exercises.some(e=>e.type===type&&e.detail===detail);
+        if(!exists)d.exercises.push({id:Date.now()+Math.random(),type,detail,kcal});
+      });
+
+      // 4. TASKS
+      const taskBuf={};
+      getRows('TASKS').forEach(row=>{
+        const key=String(row[0]||'').trim(); if(!isValidKey(key)||!row[2])return;
+        const q=QN_IMPORT[String(row[1])]||'q1';
+        if(!taskBuf[key])taskBuf[key]={q1:[],q2:[],q3:[],q4:[]};
+        taskBuf[key][q].push({text:String(row[2]),done:row[3]==1||row[3]==='1'});
+      });
+      Object.entries(taskBuf).forEach(([key,qs])=>{
+        const d=ensureDay(key);
+        if(!d.tasks)d.tasks={q1:[],q2:[],q3:[],q4:[]};
+        ['q1','q2','q3','q4'].forEach(q=>{
+          const existing=new Set((d.tasks[q]||[]).map(t=>t.text).filter(Boolean));
+          (qs[q]||[]).forEach(t=>{
+            if(!existing.has(t.text)){
+              // fill into first empty slot or push
+              const emptyIdx=(d.tasks[q]||[]).findIndex(x=>!x.text);
+              if(emptyIdx>=0)d.tasks[q][emptyIdx]=t;
+              else if((d.tasks[q]||[]).length<5)d.tasks[q].push(t);
+            }
+          });
+          // ensure always 5 slots
+          while((d.tasks[q]||[]).length<5)(d.tasks[q]=d.tasks[q]||[]).push({text:'',done:false});
+        });
+      });
+
+      // 5. FINANCE
+      getRows('FINANCE').forEach(row=>{
+        const key=String(row[0]||'').trim(); if(!isValidKey(key))return;
+        const d=ensureDay(key);
+        if(!d.transactions)d.transactions={income:[],expense:[],variable:[]};
+        const type=TYPE_REV[String(row[1])]||'variable';
+        const cat=String(row[2]||'อื่นๆ'), note=String(row[3]||'');
+        const amt=parseFloat(row[4])||0;
+        if(!cat&&!note&&amt===0)return;
+        const exists=d.transactions[type].some(t=>t.cat===cat&&t.note===note&&parseFloat(t.amount)===amt);
+        if(!exists)d.transactions[type].push({id:Date.now()+Math.random(),cat,note,amount:amt});
+      });
+
+      // 6. CONTACTS
+      getRows('CONTACTS').forEach(row=>{
+        const key=String(row[0]||'').trim(); if(!isValidKey(key)||!row[1])return;
+        const d=ensureDay(key);
+        if(!d.contacts)d.contacts=[];
+        const name=String(row[1]);
+        if(!d.contacts.some(c=>c.name===name))
+          d.contacts.push({id:Date.now()+Math.random(),name,actions:String(row[2]||'').split('|').filter(Boolean),note:String(row[3]||'')});
+      });
+
+      // Write to localStorage
+      let created=0, merged=0;
+      Object.entries(dayMap).forEach(([key,rec])=>{
+        const existed=!!loadDay(key);
+        localStorage.setItem('5wp_'+key,JSON.stringify(rec));
+        if(existed)merged++; else created++;
+      });
+
+      const total=Object.keys(dayMap).length;
+      if(info)info.textContent=`✓ Import สำเร็จ — ${created} วันใหม่, ${merged} วัน merged (total ${total} records)`;
+      alert(`Import สำเร็จ!\n\n✓ ${created} วันใหม่ restore แล้ว\n↔ ${merged} วัน merge กับข้อมูลเดิม\n\nรวม ${total} records`);
+      renderDataPage();
+      loadAll();
+    }catch(err){
+      console.error('Import error:',err);
+      if(info)info.textContent='✕ Import ล้มเหลว: '+err.message;
+      alert('Import ล้มเหลว\n\n'+err.message+'\n\nใช้ได้เฉพาะไฟล์ที่ export จาก 5 Wealth Planner เท่านั้น');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── CLEAR ALL ────────────────────────────────
+function clearAllData(){
+  const keys=getAllStoredKeys();
+  if(!keys.length){alert('ไม่มีข้อมูลใน device นี้');return;}
+  if(!confirm(`⚠ ต้องการลบข้อมูลทั้งหมด ${keys.length} วัน?\n\nแนะนำ Export ก่อนลบ\nข้อมูลจะหายถาวร ไม่สามารถกู้คืนได้`))return;
+  if(!confirm('ยืนยันอีกครั้ง — ลบข้อมูลทั้งหมด?'))return;
+  keys.forEach(k=>localStorage.removeItem('5wp_'+k));
+  alert('ลบข้อมูลทั้งหมดเรียบร้อย');
+  const info=document.getElementById('import-info');
+  if(info)info.textContent='✕ ลบข้อมูลทั้งหมดแล้ว';
+  renderDataPage();
+  loadAll();
+}
+
+// ── MONTHLY EXPORT ────────────────────────────
+function exportMonthExcel(){
+  const y=dmDate.getFullYear(), mo=dmDate.getMonth();
+  const days=getMonthDays(y,mo);
+  const wb=XLSX.utils.book_new();
+  const H=['Date','Day','Score','Calories','Protein_g','Carbs_g','Fat_g','Water_ml','Steps','Income_THB','Fix_THB','Variable_THB','Balance_THB','Tasks_Done','Tasks_Total','Task_Rate%','Stress','Morning_Mood','Evening_Mood','Morning_Note','Next_Day'];
+  const R=days.map(({key,date})=>{
+    const r=loadDay(key);
+    if(!r)return[key,date.toLocaleDateString('th-TH',{weekday:'short'}),...Array(19).fill('')];
+    const mac=mealTotals((r.meals||[]).flatMap(m=>m.items||[]));
+    const inc=(r.transactions?.income||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    const ef =(r.transactions?.expense||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    const ev =(r.transactions?.variable||[]).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    const ts2=r.tasks||{};let dn=0,tt=0;Object.values(ts2).forEach(arr=>arr.forEach(t=>{if(t.text){tt++;if(t.done)dn++;}}));
+    return[key,date.toLocaleDateString('th-TH',{weekday:'short'}),dayScore(r),Math.round(mac.kcal),Math.round(mac.pro),Math.round(mac.carb),Math.round(mac.fat),r.water||0,r.steps||0,Math.round(inc),Math.round(ef),Math.round(ev),Math.round(inc-ef-ev),dn,tt,tt>0?Math.round(dn/tt*100):0,r.stress||'',r.morningMood||'',r.eveningMood||'',r.morningThought||'',r.nextDay||''];
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([H,...R]),'Monthly');
+  XLSX.writeFile(wb,'5WP_'+y+'-'+String(mo+1).padStart(2,'0')+'.xlsx');
+}
+
+// ═══════════════════════════════════════════════
+//  LOAD ALL (restore state for current date)
+// ═══════════════════════════════════════════════
+function loadAll(){
+  updateDateDisplay();
+  buildMatrix();
+  meals=[]; exercises=[]; waterVal=0; stepsVal=0;
+  transactions={income:[],expense:[],variable:[]};
+  contacts=[];
+  _mid=1; _eid=1; _tid=1; _cid=1;
+  renderMeals(); renderEx();
+  ['income','expense','variable'].forEach(t=>{renderTxns(t);renderCatRail(t);});
+  renderContacts();
+  setWater(0); setSteps(0);
+  ['morning-thought','unfinished','next-day','day-summary'].forEach(id=>{
+    const e=document.getElementById(id); if(e)e.value='';
+  });
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('stress-sl').value=3;
+  document.getElementById('sv').textContent=3;
+
+  const s=loadDay();
+  if(s){
+    if(s.morningMood)document.querySelectorAll('#morning-mood .mood-btn').forEach(b=>{if(b.textContent===s.morningMood)b.classList.add('active');});
+    if(s.eveningMood)document.querySelectorAll('#evening-mood .mood-btn').forEach(b=>{if(b.textContent===s.eveningMood)b.classList.add('active');});
+    if(s.stress){document.getElementById('stress-sl').value=s.stress;document.getElementById('sv').textContent=s.stress;}
+    if(s.morningThought)document.getElementById('morning-thought').value=s.morningThought;
+    if(s.tasks)setTasks(s.tasks);
+    if(s.meals&&s.meals.length){
+      s.meals.forEach(m=>{const id=m.id||_mid++;meals.push({...m,id});if(id>=_mid)_mid=id+1;});
+      renderMeals();
+    }
+    if(s.exercises&&s.exercises.length){
+      s.exercises.forEach(ex=>{const id=ex.id||_eid++;exercises.push({...ex,id});if(id>=_eid)_eid=id+1;});
+      renderEx();
+    }
+    if(s.water)setWater(s.water);
+    if(s.steps)setSteps(s.steps);
+    if(s.transactions){
+      transactions=s.transactions;
+      ['income','expense','variable'].forEach(t=>{renderTxns(t);renderCatRail(t);});
+    }
+    if(s.contacts&&s.contacts.length){
+      s.contacts.forEach(c=>{const id=c.id||_cid++;contacts.push({...c,id});if(id>=_cid)_cid=id+1;});
+      renderContacts();
+    }
+    if(s.unfinished)document.getElementById('unfinished').value=s.unfinished;
+    if(s.nextDay)    document.getElementById('next-day').value=s.nextDay;
+    if(s.daySummary) document.getElementById('day-summary').value=s.daySummary;
+  }
+  updateBar();
+  updateFinTotals();
+}
+
+// kick off
+loadAll();
+</script>
+</body>
+</html>
